@@ -1,0 +1,28 @@
+{
+  "players": [
+    {
+      "id": "ronaldinho-99",
+      "name": "Ronaldinho",
+      "position": "LW",
+      "club": "Icons",
+      "nation": "Brazil",
+      "image": "cards/ronaldinho-99.svg"
+    },
+    {
+      "id": "luis-diaz-98",
+      "name": "Luis Díaz",
+      "position": "LW",
+      "club": "Liverpool",
+      "nation": "Colombia",
+      "image": "cards/luis-diaz-98.svg"
+    },
+    {
+      "id": "bakayoko-98",
+      "name": "Bakayoko",
+      "position": "RW",
+      "club": "PSV",
+      "nation": "Belgium",
+      "image": "cards/bakayoko-98.svg"
+    }
+  ]
+}
