@@ -2,28 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>EAFC Guide — Minimal Cards</title>
+<title>EAFC Guide — 4x Mobile · 8x Desktop</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-<!-- Poppins (variable) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-
 <style>
   :root{
-    /* FC26 palette */
-    --bg0:#06131A; --bg1:#0A1D28; --line:#133443;
-    --text:#EAF6FF; --muted:#9FBBCD;
+    --bg0:#06131A; --bg1:#0A1D28; --line:#133443; --text:#EAF6FF; --muted:#9FBBCD;
     --g1:#22E4C6; --g2:#25B6FF; --g3:#9BFF53;
-    --brand-grad: linear-gradient(135deg, var(--g2), var(--g1));
-    --brand-grad-2: linear-gradient(135deg, var(--g2), var(--g3));
+    --brand-grad-2: linear-gradient(135deg,var(--g2),var(--g3));
+    --shadow:0 10px 22px rgba(0,0,0,.35);
 
-    --radius:18px; --shadow:0 12px 26px rgba(0,0,0,.35);
-
-    /* Card sizing */
-    --card-h: 260px;       /* uniform height */
-    --art-ratio: 3/4;      /* artwork aspect */
+    /* card defaults: MOBILE first (4 cols) */
+    --card-h: 140px;          /* comfy for 4-up phones */
+    --art-ratio: 3/4;
   }
 
   *{box-sizing:border-box}
@@ -39,77 +32,67 @@
       var(--bg0);
   }
 
-  /* Header (kept lightweight) */
   header{
     position:sticky; top:0; z-index:30;
-    backdrop-filter:saturate(1.1) blur(10px);
     background:linear-gradient(180deg, rgba(6,19,26,.92), rgba(6,19,26,.70));
-    border-bottom:1px solid var(--line);
+    border-bottom:1px solid var(--line); backdrop-filter:blur(10px)
   }
-  .wrap{max-width:1200px; margin:0 auto; padding:12px 16px; display:flex; gap:10px; align-items:center}
-  h1{margin:0; font-size:18px; display:flex; align-items:center; gap:10px}
-  .logo{
-    width:30px; height:30px; display:grid; place-items:center; border-radius:9px;
-    background:var(--brand-grad-2); color:#021118; font-weight:900; box-shadow:var(--shadow)
-  }
-  .search{
-    flex:1; min-width:200px; display:flex; align-items:center; gap:8px;
-    background:var(--bg1); padding:10px 12px; border:1px solid var(--line); border-radius:12px
-  }
+  .wrap{max-width:1280px; margin:0 auto; padding:10px 12px; display:flex; gap:8px; align-items:center}
+  h1{margin:0; font-size:16px; display:flex; align-items:center; gap:8px}
+  .logo{width:26px; height:26px; display:grid; place-items:center; border-radius:8px; background:var(--brand-grad-2); color:#031216; font-weight:900; box-shadow:var(--shadow)}
+  .search{flex:1; min-width:160px; display:flex; align-items:center; gap:8px; background:var(--bg1); padding:8px 10px; border:1px solid var(--line); border-radius:12px}
   .search input{width:100%; background:transparent; border:0; color:var(--text); outline:none; font-size:14px}
 
-  main{max-width:1200px; margin:16px auto; padding:0 16px 24px}
+  main{max-width:1280px; margin:12px auto 20px; padding:0 10px}
 
-  /* ── Grid: 4 per row on desktop, responsive below ───────── */
-  .grid{display:grid; gap:16px}
-  @media (min-width:1200px){ .grid{grid-template-columns:repeat(4,1fr)} }
-  @media (min-width:900px) and (max-width:1199px){ .grid{grid-template-columns:repeat(3,1fr)} }
-  @media (min-width:600px) and (max-width:899px){ .grid{grid-template-columns:repeat(2,1fr)} }
-  @media (max-width:599px){ .grid{grid-template-columns:1fr} }
+  /* GRID: 4 columns on mobile; 8 on desktop */
+  .grid{display:grid; gap:8px; grid-template-columns:repeat(4,1fr)}
+  @media (min-width:1200px){
+    .grid{gap:12px; grid-template-columns:repeat(8,1fr)}
+    :root{ --card-h: 200px; } /* scale up on desktop */
+  }
 
-  /* ── Minimal card ─────────────────────────────────────────── */
+  /* CARD: minimal */
   .card{
     height:var(--card-h);
-    border:1px solid var(--line); border-radius:16px; background:rgba(10,29,40,.94);
+    border:1px solid var(--line); border-radius:14px; background:rgba(10,29,40,.94);
     box-shadow:var(--shadow); overflow:hidden; cursor:pointer;
-    display:grid; grid-template-rows:1fr;
-    transition: transform .12s ease, box-shadow .12s ease;
+    display:grid; grid-template-rows:1fr; transition:transform .1s ease, box-shadow .1s ease;
   }
   .card:focus-visible{outline:2px solid var(--g2); outline-offset:2px}
-  .card:hover{ transform: translateY(-3px); box-shadow:0 14px 30px rgba(0,0,0,.45); }
+  .card:hover{ transform:translateY(-2px); box-shadow:0 12px 26px rgba(0,0,0,.45) }
 
-  .art{
-    position:relative; padding:12px; height:100%; display:grid; align-items:center; justify-items:center;
-  }
+  .art{position:relative; padding:8px; height:100%; display:grid; align-items:center; justify-items:center}
   .art-inner{
-    position:relative; width:100%; height:100%; border-radius:14px; overflow:hidden;
-    aspect-ratio: var(--art-ratio);
-    background:radial-gradient(160px 120px at 30% 0%, rgba(255,255,255,.12), transparent 45%), #131017;
-    border:1px solid rgba(255,255,255,.10);
+    position:relative; width:100%; height:100%; border-radius:12px; overflow:hidden;
+    aspect-ratio:var(--art-ratio);
+    background:radial-gradient(160px 120px at 30% 0%, rgba(255,255,255,.10), transparent 45%), #131017;
+    border:1px solid rgba(255,255,255,.1);
   }
-  /* default/global frame; per-card can override inline via style="--frame-url:url(...)" */
   .art-inner::before{
-    content:""; position:absolute; inset:0; border-radius:14px;
-    background-image: var(--frame-url, none); background-size:cover; background-position:center; background-repeat:no-repeat; opacity:.95;
-    pointer-events:none;
+    content:""; position:absolute; inset:0; border-radius:12px; pointer-events:none; opacity:.95;
+    background-image: var(--frame-url, none); background-size:cover; background-position:center; background-repeat:no-repeat;
   }
 
-  /* rating badge */
   .rating{
-    position:absolute; left:16px; top:16px;
-    width:58px; height:58px; border-radius:14px; background:var(--brand-grad-2); padding:3px;
-    box-shadow:inset 0 0 0 2px rgba(255,255,255,.18)
+    position:absolute; left:12px; top:12px;
+    width:44px; height:44px; border-radius:12px; background:var(--brand-grad-2); padding:2px;
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,.15)
   }
-  .rating > b{
-    width:100%; height:100%; display:grid; place-items:center; border-radius:10px;
+  .rating>b{
+    width:100%; height:100%; display:grid; place-items:center; border-radius:9px;
     background:radial-gradient(120px 120px at 30% 10%, rgba(255,255,255,.18), transparent 40%), #0E0B11;
-    font-weight:900; font-size:22px; letter-spacing:.5px
+    font-weight:900; font-size:18px; letter-spacing:.3px
+  }
+  @media (min-width:1200px){
+    .rating{left:14px; top:14px; width:56px; height:56px}
+    .rating>b{font-size:22px}
   }
 
-  /* Modal */
+  /* Modal (for details on click) */
   .modal{position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.55); backdrop-filter:blur(6px); z-index:60}
   .modal.open{display:grid}
-  .card-modal{width:min(680px,92vw); background:var(--bg1); border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow)}
+  .card-modal{width:min(720px,92vw); background:var(--bg1); border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow)}
   .card-modal header{display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--line)}
   .x{all:unset; cursor:pointer; display:inline-grid; place-items:center; padding:8px 10px; border-radius:12px; background:#0F2430; border:1px solid var(--line); color:var(--text)}
   .modal-body{padding:16px}
@@ -146,21 +129,19 @@
 </div>
 
 <script>
-/* ========= CONFIG: set your global frame file here ========= */
-const CONFIG = {
-  frameURL: "assets/frame_default.png"   // <- put the PNG/JPG in /assets/ and change this path
-};
+/* ---------- CONFIG: global frame file ---------- */
+const CONFIG = { frameURL: "assets/frame_default.png" }; // change to your PNG/JPG
 document.documentElement.style.setProperty("--frame-url", `url("${CONFIG.frameURL}")`);
 
-/* ========= DEMO DATA (replace with your live feed) ========= */
+/* ---------- Demo data (swap for live feed) ---------- */
 const releases = [
-  // per-card frame can override global via `frame:"assets/festival_frame.png"`
-  {id:112, rating:99, name:"Ronaldinho", pos:"LW", club:"Icons", nation:"Brazil", promo:"Icon Moments", sm:5, wf:5, releasedAt:daysAgo(7), pop:99, frame:"assets/icon_frame.png"},
-  {id:103, rating:98, name:"Luis Díaz", pos:"LW", club:"Liverpool", nation:"Colombia", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(2), pop:96, frame:"assets/festival_frame.png"},
-  {id:101, rating:98, name:"Bakayoko", pos:"RW", club:"PSV", nation:"Belgium", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(0.3), pop:95, frame:"assets/festival_frame.png"},
-  {id:105, rating:98, name:"Cherki", pos:"CAM", club:"Lyon", nation:"France", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(3), pop:92, frame:"assets/festival_frame.png"},
-  {id:104, rating:98, name:"Justin Kluivert", pos:"ST", club:"Bournemouth", nation:"Netherlands", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(2), pop:89, frame:"assets/festival_frame.png"},
-  {id:102, rating:98, name:"Noa Lang", pos:"LW", club:"PSV", nation:"Netherlands", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(1), pop:91, frame:"assets/festival_frame.png"}
+  {id:112, rating:99, name:"Ronaldinho", pos:"LW", club:"Icons", nation:"Brazil", promo:"Icon Moments", sm:5, wf:5, releasedAt:daysAgo(7),  pop:99, frame:"assets/icon_frame.png"},
+  {id:103, rating:98, name:"Luis Díaz",  pos:"LW", club:"Liverpool", nation:"Colombia", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(2),  pop:96, frame:"assets/festival_frame.png"},
+  {id:101, rating:98, name:"Bakayoko",   pos:"RW", club:"PSV",       nation:"Belgium",  promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(0.3),pop:95, frame:"assets/festival_frame.png"},
+  {id:105, rating:98, name:"Cherki",     pos:"CAM",club:"Lyon",      nation:"France",   promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(3),  pop:92, frame:"assets/festival_frame.png"},
+  {id:104, rating:98, name:"J. Kluivert",pos:"ST", club:"Bournemouth",nation:"Netherlands",promo:"Festival",sm:5,wf:5,releasedAt:daysAgo(2),pop:89, frame:"assets/festival_frame.png"},
+  {id:102, rating:98, name:"Noa Lang",   pos:"LW", club:"PSV",       nation:"Netherlands",promo:"Festival",sm:5,wf:5,releasedAt:daysAgo(1), pop:91, frame:"assets/festival_frame.png"},
+  // add more to see 8-up desktop fill
 ];
 
 const players = releases.map(r => ({
@@ -169,10 +150,8 @@ const players = releases.map(r => ({
   skillMoves:r.sm, weakFoot:r.wf, workRate:"High/Medium", foot:"Right"
 }));
 
-/* ========= STATE ========= */
+/* ---------- State + helpers ---------- */
 let state = { q:"" };
-
-/* ========= HELPERS ========= */
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
@@ -180,17 +159,16 @@ function daysAgo(d){ const t=new Date(); t.setTime(t.getTime()-d*24*3600*1000); 
 function timeAgo(iso){ const sec=(Date.now()-new Date(iso).getTime())/1000; const d=Math.floor(sec/86400), h=Math.floor((sec%86400)/3600); if(d>=1) return d+" days ago"; if(h>=1) return h+" hours ago"; return "Just now"; }
 function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
 
-/* ========= RENDER GRID ========= */
+/* ---------- Grid render ---------- */
 function render(){
-  const grid=$("#grid");
-  const q=state.q;
+  const q = state.q;
   const items = releases.filter(r=>{
     if(!q) return true;
     const hay=(r.name+" "+r.club+" "+r.nation+" "+r.promo).toLowerCase();
     return hay.includes(q);
   });
 
-  grid.innerHTML = items.map(r=>{
+  $("#grid").innerHTML = items.map(r=>{
     const frameStyle = r.frame ? `--frame-url:url('${r.frame}')` : "";
     return `
       <article class="card" tabindex="0" role="button" aria-label="${esc(r.name)}" data-id="${r.id}">
@@ -199,15 +177,16 @@ function render(){
             <div class="rating"><b>${r.rating}</b></div>
           </div>
         </div>
-      </article>
-    `;
+      </article>`;
   }).join("");
 
   $$("#grid .card").forEach(el=>{
     el.addEventListener("click", openFromCard);
-    el.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" ") openFromCard.call(el,e); });
+    el.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" ") openFromCard.call(el,e); });
   });
 }
+
+/* ---------- Open modal with details ---------- */
 function openFromCard(){
   const id=+this.dataset.id;
   const r=releases.find(x=>x.id===id);
@@ -233,27 +212,23 @@ function openFromCard(){
           ${detail("Defending", p.defending)}
           ${detail("Physical", p.physical)}
         </div>
-        <div class="muted">Promo: ${esc(r.promo)} • SM ${r.sm}★ • WF ${r.wf}★</div>
+        <div class="muted">Promo: ${esc(r.promo)} • SM ${p.skillMoves}★ • WF ${p.weakFoot}★</div>
       </div>
-    </div>
-  `;
+    </div>`;
   $("#modal").classList.add("open"); $("#modal").setAttribute("aria-hidden","false");
 }
-function detail(label,val){
-  val = clamp(+val||0,1,99);
-  return `<div><div class="muted" style="font-size:12px">${label}</div><div style="display:flex; gap:8px; align-items:center"><b>${val}</b><div class="statbar" style="flex:1"><i style="width:${val}%"></i></div></div></div>`;
-}
+function detail(label,val){ val=clamp(+val||0,1,99); return `<div><div class="muted" style="font-size:12px">${label}</div><div style="display:flex; gap:8px; align-items:center"><b>${val}</b><div class="statbar" style="flex:1"><i style="width:${val}%"></i></div></div></div>`; }
 
-/* ========= SEARCH ========= */
+/* ---------- Search ---------- */
 $("#q").addEventListener("input", e=>{ state.q = e.target.value.trim().toLowerCase(); render(); });
 
-/* ========= MODAL ========= */
+/* ---------- Modal close ---------- */
 $("#closeModal").addEventListener("click", closeModal);
 $("#modal").addEventListener("click", e=>{ if(e.target.id==="modal") closeModal(); });
 window.addEventListener("keydown", e=>{ if(e.key==="Escape") closeModal(); });
 function closeModal(){ $("#modal").classList.remove("open"); $("#modal").setAttribute("aria-hidden","true"); }
 
-/* ========= BOOT ========= */
+/* ---------- Boot ---------- */
 render();
 </script>
 </body>
