@@ -5,31 +5,27 @@
 <title>EAFC Guide — FC26 Theme</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<!-- Poppins variable font -->
+<!-- Poppins (variable) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 
 <style>
   :root{
-    /* FC26-like palette (from your 2nd image) */
-    --bg0:#06131A;           /* deep blue-black */
-    --bg1:#0A1D28;           /* card panel */
-    --line:#133443;          /* subtle borders */
-    --text:#EAF6FF;
-    --muted:#9FBBCD;
-    --chip:#0F2430;
-
-    /* accent gradient: aqua -> lime with a hint of cyan */
-    --g1:#22E4C6;
-    --g2:#25B6FF;
-    --g3:#9BFF53;
+    /* FC26 palette */
+    --bg0:#06131A; --bg1:#0A1D28; --line:#133443;
+    --text:#EAF6FF; --muted:#9FBBCD; --chip:#0F2430;
+    --g1:#22E4C6; --g2:#25B6FF; --g3:#9BFF53;
 
     --brand-grad: linear-gradient(135deg, var(--g2), var(--g1));
     --brand-grad-2: linear-gradient(135deg, var(--g2), var(--g3));
 
-    --radius:18px;
-    --shadow:0 12px 26px rgba(0,0,0,.35);
+    --radius:18px; --shadow:0 12px 26px rgba(0,0,0,.35);
+
+    /* Card sizing */
+    --card-w: 100%;
+    --card-h: 280px;         /* consistent height for all cards */
+    --art-ratio: 3/4;        /* 3:4 artwork area */
   }
 
   *{box-sizing:border-box}
@@ -37,8 +33,7 @@
   body{
     margin:0; color:var(--text);
     font-family:"Poppins", system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial;
-    font-variation-settings: "wght" 475;
-    /* FC26 blurred waves background */
+    font-variation-settings:"wght" 470;
     background:
       radial-gradient(1000px 700px at 15% -10%, rgba(37,182,255,.18), transparent 50%),
       radial-gradient(900px 600px at 90% 0%, rgba(34,228,198,.16), transparent 50%),
@@ -48,96 +43,98 @@
 
   /* Header */
   header{
-    position:sticky; top:0; z-index:30;
+    position:sticky; top:0; z-index:50;
     backdrop-filter:saturate(1.1) blur(10px);
     background:linear-gradient(180deg, rgba(6,19,26,.92), rgba(6,19,26,.70));
     border-bottom:1px solid var(--line);
   }
   .wrap{max-width:1200px; margin:0 auto; padding:12px 16px}
   .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-
   h1{margin:0; font-size:18px; display:flex; align-items:center; gap:10px}
   .logo{
     width:30px; height:30px; display:grid; place-items:center; border-radius:9px;
     background:var(--brand-grad-2); color:#021118; font-weight:900; box-shadow:var(--shadow)
   }
-
   .search{
     flex:1 1 280px; min-width:180px; display:flex; align-items:center; gap:8px;
     background:var(--bg1); padding:10px 12px; border:1px solid var(--line); border-radius:12px
   }
   .search input{width:100%; background:transparent; border:0; color:var(--text); outline:none; font-size:14px}
 
-  .seg{
-    display:flex; gap:6px; background:var(--bg1); padding:4px; border:1px solid var(--line);
-    border-radius:12px
-  }
-  .seg button{
-    padding:8px 12px; border-radius:10px; color:var(--muted); cursor:pointer; background:transparent; border:0;
-    font-weight:600
-  }
+  .seg{display:flex; gap:6px; background:var(--bg1); padding:4px; border:1px solid var(--line); border-radius:12px}
+  .seg button{padding:8px 12px; border-radius:10px; color:var(--muted); cursor:pointer; background:transparent; border:0; font-weight:600}
   .seg button.active{background:var(--brand-grad); color:#04131A}
 
-  .iconbtn,.pill,.x{
-    all:unset; cursor:pointer; user-select:none;
-    display:inline-grid; place-items:center; padding:8px 10px; border-radius:12px;
-    background:var(--chip); border:1px solid var(--line); color:var(--text)
+  .iconbtn{all:unset; cursor:pointer; display:inline-grid; place-items:center; padding:8px 10px; border-radius:12px; background:var(--chip); border:1px solid var(--line)}
+
+  main{max-width:1200px; margin:0 auto; padding:0 16px 24px}
+
+  /* Floating pill scroller (sticky below header) */
+  .pillbar-wrap{
+    position:sticky; top:58px; z-index:40; padding:10px 0;
+    background:linear-gradient(180deg, rgba(6,19,26,.92), rgba(6,19,26,.70));
+    backdrop-filter:saturate(1.1) blur(8px);
   }
-  .pill{padding:8px 12px; color:var(--muted)}
+  .scroller{
+    position:relative;
+  }
+  .pillbar{
+    display:inline-flex; gap:10px; padding:0 16px;
+    overflow-x:auto; scroll-behavior:smooth; overscroll-behavior-x:contain;
+    scroll-snap-type:x proximity; -webkit-overflow-scrolling:touch;
+    mask-image: linear-gradient(to right, transparent 0, black 24px, black calc(100% - 24px), transparent 100%);
+  }
+  .pill{white-space:nowrap; padding:8px 12px; border:1px solid var(--line); border-radius:999px; background:var(--chip); color:var(--muted); cursor:pointer; scroll-snap-align:start}
   .pill.active{background:var(--brand-grad); color:#04131A; border-color:transparent; font-weight:800}
-  .muted{color:var(--muted)}
 
-  main{max-width:1200px; margin:16px auto; padding:0 16px}
-
-  /* Home: pillbar + grid */
-  .pillbar{display:flex; gap:10px; flex-wrap:wrap; margin:8px 0 12px}
-  .grid{display:grid; gap:14px}
+  /* Grid */
+  .grid{display:grid; gap:14px; padding-top:14px}
   @media (min-width:420px){ .grid{grid-template-columns:repeat(2,1fr)} }
   @media (min-width:780px){ .grid{grid-template-columns:repeat(3,1fr)} }
   @media (min-width:1100px){ .grid{grid-template-columns:repeat(4,1fr)} }
 
-  /* Player Card — cleaner layout */
+  /* Uniform Card */
   .card{
-    position:relative; border:1px solid var(--line); border-radius:16px; background:rgba(10,29,40,.92);
-    box-shadow:var(--shadow); overflow:hidden; padding:12px; display:grid; grid-template-columns:92px 1fr; gap:12px
+    width:var(--card-w); height:var(--card-h);
+    border:1px solid var(--line); border-radius:16px; background:rgba(10,29,40,.92);
+    box-shadow:var(--shadow); overflow:hidden;
+    display:grid; grid-template-rows: minmax(0, 1fr) auto; /* art grows, footer fixed */
   }
-  .cardArt{
-    position:relative; width:100%; height:120px; border-radius:12px; overflow:hidden;
+  .art{
+    position:relative; padding:10px; display:grid; grid-template-rows:1fr; align-items:stretch;
+  }
+  .art-inner{
+    border-radius:12px; overflow:hidden; position:relative;
+    aspect-ratio: var(--art-ratio); height:100%; width:100%; margin:0 auto;
     background:radial-gradient(160px 120px at 30% 0%, rgba(255,255,255,.12), transparent 45%), #131017;
-    display:grid; place-items:center; border:1px solid rgba(255,255,255,.10)
+    border:1px solid rgba(255,255,255,.10);
   }
-  /* frame image (user uploads) sits on top */
-  .cardArt::before{
+  /* default/global frame from CSS variable; per-card frame overrides inline style */
+  .art-inner::before{
     content:""; position:absolute; inset:0; background-size:cover; background-position:center; background-repeat:no-repeat;
-    opacity:.95; pointer-events:none; border-radius:12px;
-    background-image: var(--frame-url, none);
+    opacity:.95; pointer-events:none; border-radius:12px; background-image: var(--frame-url, none);
   }
   .rating{
-    position:relative; z-index:1;
-    display:grid; place-items:center; width:64px; height:64px; border-radius:14px;
-    background:var(--brand-grad-2); padding:3px; box-shadow:inset 0 0 0 2px rgba(255,255,255,.18)
+    position:absolute; left:18px; top:18px; display:grid; place-items:center;
+    width:62px; height:62px; border-radius:14px; background:var(--brand-grad-2); padding:3px; box-shadow:inset 0 0 0 2px rgba(255,255,255,.18)
   }
   .rating > b{
-    display:grid; place-items:center; width:100%; height:100%; border-radius:10px;
+    width:100%; height:100%; display:grid; place-items:center; border-radius:10px;
     background:radial-gradient(120px 120px at 30% 10%, rgba(255,255,255,.18), transparent 40%), #0E0B11;
     font-size:22px; font-weight:900; letter-spacing:.5px
   }
 
-  .meta .name{font-weight:800; font-size:16px; line-height:1.2}
-  .poschip{
-    display:inline-block; font-size:11px; padding:4px 8px; border-radius:999px;
-    background:var(--chip); border:1px solid var(--line); margin-left:8px; color:var(--text); font-weight:700
-  }
-  .sub{font-size:12px; color:var(--muted); margin-top:2px}
-  .rowm{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px}
-  .chip{
-    font-size:11px; padding:4px 8px; border-radius:999px; background:#0b1f29; border:1px solid var(--line);
-    color:#CFEAFA
-  }
-  .ago{margin-left:auto; color:var(--muted); font-size:11px}
+  .meta{padding:10px 12px 12px 12px; display:grid; gap:6px}
+  .title{display:flex; align-items:center; gap:8px}
+  .name{font-weight:800; font-size:16px; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .poschip{font-size:11px; padding:4px 8px; border-radius:999px; background:#0b1f29; border:1px solid var(--line); color:#CFEAFA; font-weight:700}
+  .sub{font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .rowm{display:flex; gap:8px; align-items:center; color:var(--muted); font-size:11px}
+  .chip{font-size:11px; padding:4px 8px; border-radius:999px; background:#0b1f29; border:1px solid var(--line)}
+  .ago{margin-left:auto}
 
-  /* Database (kept, but tone-matched) */
-  .layout{display:grid; grid-template-columns:280px 1fr; gap:16px}
+  /* Database styling (shortened) */
+  .layout{display:grid; grid-template-columns:280px 1fr; gap:16px; padding-top:18px}
   @media (max-width:960px){ .layout{grid-template-columns:1fr} }
   .panel{background:rgba(10,29,40,.92); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow)}
   .filters{padding:14px}
@@ -150,19 +147,13 @@
   .toolbar .spacer{flex:1}
   .table-wrap{overflow:auto}
   table{width:100%; border-collapse:separate; border-spacing:0; min-width:920px}
-  thead th{
-    position:sticky; top:0; background:linear-gradient(180deg, rgba(10,29,40,1), rgba(10,29,40,.95));
-    border-bottom:1px solid var(--line); font-size:12px; color:var(--muted); text-align:left; padding:10px; white-space:nowrap
-  }
+  thead th{position:sticky; top:0; background:linear-gradient(180deg, rgba(10,29,40,1), rgba(10,29,40,.95)); border-bottom:1px solid var(--line); font-size:12px; color:var(--muted); text-align:left; padding:10px; white-space:nowrap}
   tbody td{padding:12px 10px; border-bottom:1px solid var(--line); font-size:14px}
   th.sortable{cursor:pointer}
   .statbar{height:8px; background:#0c1f2a; border:1px solid var(--line); border-radius:999px; overflow:hidden}
   .statbar>i{display:block; height:100%; background:linear-gradient(90deg,var(--g1),var(--g2)); width:0%}
-
   @media (max-width:720px){
-    table{min-width:0}
-    thead{display:none}
-    tbody,tr,td{display:block;width:100%}
+    table{min-width:0} thead{display:none} tbody,tr,td{display:block;width:100%}
     tbody tr{border:1px solid var(--line); border-radius:14px; margin:10px 0; background:rgba(10,29,40,.92); box-shadow:var(--shadow)}
     tbody td{display:grid; grid-template-columns:120px 1fr; gap:10px; padding:10px 12px; border-bottom:1px solid var(--line)}
     tbody td:last-child{border-bottom:none}
@@ -170,46 +161,50 @@
   }
 
   /* Modal */
-  .modal{position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.5); backdrop-filter:blur(6px); z-index:40}
+  .modal{position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.5); backdrop-filter:blur(6px); z-index:60}
   .modal.open{display:grid}
   .card-modal{width:min(680px,92vw); background:var(--bg1); border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow)}
   .card-modal header .wrap{display:flex; align-items:center; justify-content:space-between}
+  .x{all:unset; cursor:pointer; display:inline-grid; place-items:center; padding:8px 10px; border-radius:12px; background:var(--chip); border:1px solid var(--line)}
 </style>
 </head>
 <body>
 <header>
   <div class="wrap row">
     <h1><span class="logo">FC</span> EAFC Guide</h1>
-
     <div class="search" role="search" style="flex:1">
       <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 18a8 8 0 1 1 5.292-14.036A8 8 0 0 1 10 18m11.707 2.293l-5.387-5.387A9.956 9.956 0 0 0 20 10a10 10 0 1 0-10 10a9.956 9.956 0 0 0 4.906-1.68l5.387 5.387z"/></svg>
       <input id="globalSearch" placeholder="Search players…" inputmode="search" />
     </div>
-
     <nav class="seg" id="navTabs">
       <button class="active" data-view="home">Home</button>
       <button data-view="db">Database</button>
     </nav>
+    <button class="iconbtn" id="scrollRight" title="Scroll pills →">›</button>
+  </div>
 
-    <!-- Settings: upload a custom card frame -->
-    <label class="iconbtn" title="Upload card frame (PNG/JPG)">
-      <input id="frameUpload" type="file" accept="image/*" hidden />
-      ⚙️
-    </label>
+  <!-- Sticky, horizontally scrollable pill bar -->
+  <div class="pillbar-wrap">
+    <div class="scroller">
+      <div class="pillbar" id="homePills">
+        <button class="pill active" data-filter="popular">Popular</button>
+        <button class="pill" data-filter="new">New Release</button>
+        <button class="pill" data-filter="promo">Latest Promo</button>
+        <button class="pill" data-filter="rating">Highest Rated</button>
+        <button class="pill" data-filter="sm5">5★ Skill</button>
+        <button class="pill" data-filter="wf5">5★ Weak Foot</button>
+        <button class="pill" data-filter="att">Attackers</button>
+        <button class="pill" data-filter="mid">Midfielders</button>
+        <button class="pill" data-filter="def">Defenders</button>
+        <button class="pill" data-filter="gk">Goalkeepers</button>
+      </div>
+    </div>
   </div>
 </header>
 
 <main>
-  <!-- HOME -->
+  <!-- HOME: uniform card grid -->
   <section id="homeView">
-    <div class="pillbar" id="homePills">
-      <button class="pill active" data-filter="popular">Popular</button>
-      <button class="pill" data-filter="new">New Release</button>
-      <button class="pill" data-filter="promo">Latest Promo</button>
-      <button class="pill" data-filter="rating">Highest Rated</button>
-      <button class="pill" data-filter="sm5">5★ Skill</button>
-      <button class="pill" data-filter="wf5">5★ Weak Foot</button>
-    </div>
     <div class="grid" id="releaseGrid"></div>
   </section>
 
@@ -287,14 +282,24 @@
 </div>
 
 <script>
-/* ======== DEMO DATA (replace with live feed later) ======== */
+/* =================== CONFIG =================== */
+/* Put your frame file in /assets/ and set the URL here.
+   You can also set per-card frames in the releases array via `frame:"assets/festival.png"`.
+*/
+const CONFIG = {
+  frameURL: "assets/frame_default.png"  // change this to your PNG/JPG path
+};
+// Expose as CSS var
+document.documentElement.style.setProperty("--frame-url", `url("${CONFIG.frameURL}")`);
+
+/* =================== DATA (demo) =================== */
 const releases = [
-  {id:112, rating:99, name:"Ronaldinho", pos:"LW", club:"Icons", nation:"Brazil", promo:"Icon Moments", sm:5, wf:5, releasedAt:daysAgo(7), pop:99},
-  {id:101, rating:98, name:"Bakayoko", pos:"RW", club:"PSV", nation:"Belgium", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(0.3), pop:95},
-  {id:102, rating:98, name:"Noa Lang", pos:"LW", club:"PSV", nation:"Netherlands", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(1), pop:91},
-  {id:103, rating:98, name:"Luis Díaz", pos:"LW", club:"Liverpool", nation:"Colombia", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(2), pop:96},
-  {id:104, rating:98, name:"Justin Kluivert", pos:"ST", club:"Bournemouth", nation:"Netherlands", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(2), pop:89},
-  {id:105, rating:98, name:"Cherki", pos:"CAM", club:"Lyon", nation:"France", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(3), pop:92}
+  {id:112, rating:99, name:"Ronaldinho", pos:"LW", club:"Icons", nation:"Brazil", promo:"Icon Moments", sm:5, wf:5, releasedAt:daysAgo(7), pop:99, frame:"assets/icon_frame.png"},
+  {id:101, rating:98, name:"Bakayoko", pos:"RW", club:"PSV", nation:"Belgium", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(0.3), pop:95, frame:"assets/festival_frame.png"},
+  {id:102, rating:98, name:"Noa Lang", pos:"LW", club:"PSV", nation:"Netherlands", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(1), pop:91, frame:"assets/festival_frame.png"},
+  {id:103, rating:98, name:"Luis Díaz", pos:"LW", club:"Liverpool", nation:"Colombia", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(2), pop:96, frame:"assets/festival_frame.png"},
+  {id:104, rating:98, name:"Justin Kluivert", pos:"ST", club:"Bournemouth", nation:"Netherlands", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(2), pop:89, frame:"assets/festival_frame.png"},
+  {id:105, rating:98, name:"Cherki", pos:"CAM", club:"Lyon", nation:"France", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(3), pop:92, frame:"assets/festival_frame.png"}
 ];
 
 const players = releases.map(r => ({
@@ -303,19 +308,19 @@ const players = releases.map(r => ({
   skillMoves:r.sm, weakFoot:r.wf, workRate:"High/Medium", foot:"Right", age:"—", height:"—", weight:"—"
 }));
 
-/* ======== STATE ======== */
+/* =================== STATE =================== */
 let state = {
   view:"home",
-  homeFilter:"rating",
+  homeFilter:"popular",
   q:"",
-  // db filters
+  // db
   club:"", nation:"", pos:"", ovrMin:1, ovrMax:99, paceMin:1, smMin:1, wfMin:1,
   sortKey:"overall", sortDir:"desc",
   page:1, rowsPerPage:25,
-  data:[...players], filtered:[]
+  filtered:[]
 };
 
-/* ======== HELPERS ======== */
+/* =================== HELPERS =================== */
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 function daysAgo(d){ const t=new Date(); t.setTime(t.getTime()-d*24*3600*1000); return t.toISOString(); }
@@ -323,39 +328,28 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&l
 function timeAgo(iso){ const sec=(Date.now()-new Date(iso).getTime())/1000; const d=Math.floor(sec/86400), h=Math.floor((sec%86400)/3600); if(d>=1) return d+" days ago"; if(h>=1) return h+" hours ago"; return "Just now"; }
 function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
 
-/* ======== FRAME UPLOAD (custom card art frame) ======== */
-const frameKey="eafc_frame_url";
-const saved = localStorage.getItem(frameKey);
-if(saved){ document.documentElement.style.setProperty('--frame-url', `url("${saved}")`); }
-$("#frameUpload").addEventListener("change", (ev)=>{
-  const f=ev.target.files?.[0]; if(!f) return;
-  const reader=new FileReader();
-  reader.onload=()=>{ const data=reader.result; localStorage.setItem(frameKey, data); document.documentElement.style.setProperty('--frame-url', `url("${data}")`); };
-  reader.readAsDataURL(f);
-});
-
-/* ======== NAV ======== */
+/* =================== NAV + SEARCH =================== */
 $("#navTabs").addEventListener("click",(e)=>{
   const b=e.target.closest("button"); if(!b) return;
   $$("#navTabs button").forEach(t=>t.classList.remove("active")); b.classList.add("active");
-  state.view=b.dataset.view;
-  $("#homeView").style.display= state.view==="home"?"block":"none";
-  $("#dbView").style.display  = state.view==="db"  ?"block":"none";
+  const v=b.dataset.view;
+  $("#homeView").style.display = (v==="home")?"block":"none";
+  $("#dbView").style.display   = (v==="db")  ?"block":"none";
 });
 
-/* ======== GLOBAL SEARCH ======== */
 $("#globalSearch").addEventListener("input", e=>{
   state.q = e.target.value.trim().toLowerCase();
-  if(state.view==="home") renderHome();
-  else { state.page=1; applyDbFilters(); renderDb(); }
+  if($("#homeView").style.display!=="none") renderHome(); else { state.page=1; applyDbFilters(); renderDb(); }
 });
 
-/* ======== HOME ======== */
 $("#homePills").addEventListener("click",(e)=>{
   const p=e.target.closest(".pill"); if(!p) return;
   $$("#homePills .pill").forEach(x=>x.classList.remove("active")); p.classList.add("active");
   state.homeFilter=p.dataset.filter; renderHome();
 });
+$("#scrollRight").addEventListener("click", ()=>{ const el=$("#homePills"); el.scrollBy({left:300, behavior:"smooth"}); });
+
+/* =================== HOME =================== */
 function homeFilterFn(r){
   const hay=(r.name+" "+r.club+" "+r.nation+" "+r.promo).toLowerCase();
   if(state.q && !hay.includes(state.q)) return false;
@@ -366,6 +360,10 @@ function homeFilterFn(r){
     case "rating": return true;
     case "sm5": return r.sm>=5;
     case "wf5": return r.wf>=5;
+    case "att": return /ST|CF|LW|RW/.test(r.pos);
+    case "mid": return /CAM|CM|CDM|LM|RM/.test(r.pos);
+    case "def": return /CB|LB|RB/.test(r.pos);
+    case "gk":  return r.pos==="GK";
     default: return true;
   }
 }
@@ -378,13 +376,21 @@ function homeSort(a,b){
 function renderHome(){
   const grid=$("#releaseGrid");
   const items=releases.filter(homeFilterFn).sort(homeSort);
-  grid.innerHTML = items.map(r=>`
+  grid.innerHTML = items.map(r=>{
+    // per-card frame overrides global
+    const frameStyle = r.frame ? `--frame-url:url('${r.frame}')` : "";
+    return `
     <article class="card" role="button" aria-label="${esc(r.name)}" data-id="${r.id}">
-      <div class="cardArt">
-        <div class="rating"><b>${r.rating}</b></div>
+      <div class="art">
+        <div class="art-inner" style="${frameStyle}">
+          <div class="rating"><b>${r.rating}</b></div>
+        </div>
       </div>
       <div class="meta">
-        <div class="name">${esc(r.name)} <span class="poschip">${esc(r.pos)}</span></div>
+        <div class="title">
+          <div class="name">${esc(r.name)}</div>
+          <span class="poschip">${esc(r.pos)}</span>
+        </div>
         <div class="sub">${esc(r.club)} • ${esc(r.nation)}</div>
         <div class="rowm">
           <span class="chip">R: ${esc(r.promo)}</span>
@@ -392,8 +398,8 @@ function renderHome(){
           <span class="ago">${esc(timeAgo(r.releasedAt))}</span>
         </div>
       </div>
-    </article>
-  `).join("");
+    </article>`;
+  }).join("");
 
   $$("#releaseGrid .card").forEach(card=>{
     card.addEventListener("click", ()=>{
@@ -404,7 +410,7 @@ function renderHome(){
   });
 }
 
-/* ======== DATABASE ======== */
+/* =================== DATABASE =================== */
 function initDb(){
   fillSelect("#club", [...new Set(players.map(p=>p.club))].filter(Boolean));
   fillSelect("#nation", [...new Set(players.map(p=>p.nation))].filter(Boolean));
@@ -498,7 +504,7 @@ function renderDb(){
 }
 function stat(v){ const val=clamp(+v||0,1,99); return `<div class="statbar" aria-label="${val}"><i style="width:${val}%"></i></div>`; }
 
-/* ======== MODAL ======== */
+/* =================== MODAL =================== */
 function openModal(p){
   const el=$("#modalBody");
   el.innerHTML = `
@@ -536,10 +542,10 @@ function closeModal(){ $("#modal").classList.remove("open"); $("#modal").setAttr
 function detailStat(label, val){ val=clamp(+val||0,1,99); return `<div><div class="muted" style="font-size:12px">${esc(label)}</div><div style="display:flex; align-items:center; gap:8px"><b>${val}</b><div class="statbar" style="flex:1"><i style="width:${val}%"></i></div></div></div>`; }
 function fact(label, val){ return `<div><div class="muted" style="font-size:12px">${esc(label)}</div><div>${esc(val??"-")}</div></div>`; }
 
-/* ======== BOOT ======== */
+/* =================== BOOT =================== */
 renderHome(); initDb();
 
-/* utils used above */
+/* utility */
 function fillSelect(sel, opts){ const el=$(sel); (opts||[]).sort((a,b)=>a.localeCompare(b)).forEach(o=>{ const op=document.createElement("option"); op.textContent=o; el.appendChild(op); }); }
 </script>
 </body>
