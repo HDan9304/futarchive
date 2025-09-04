@@ -2,206 +2,151 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>EAFC Database — Responsive Web App</title>
+<title>EAFC Guide — Cards & Database</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
   :root{
     --bg:#0b0d11; --panel:#12161d; --muted:#8a94a7; --text:#e7ecf3;
-    --brand:#5ad7ff; --brand-2:#8b5cff; --ok:#3ddc97; --warn:#ffb020; --bad:#ff5a7a;
-    --line:#202735; --chip:#151c2a; --shadow: 0 10px 30px rgba(0,0,0,.35);
-    --radius:18px;
+    --brand:#5ad7ff; --brand-2:#8b5cff; --ok:#3ddc97; --line:#202735; --chip:#151c2a;
+    --radius:18px; --shadow:0 12px 30px rgba(0,0,0,.35);
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
     margin:0; color:var(--text);
-    font-family:system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
+    font-family:system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial;
     background:
       radial-gradient(1200px 600px at 10% -10%, rgba(90,215,255,.12), transparent 50%),
       radial-gradient(900px 600px at 100% 0%, rgba(139,92,255,.12), transparent 50%),
       var(--bg);
   }
-
-  /* ---------- Header ---------- */
+  /* Header */
   header{
-    position:sticky; top:0; z-index:20;
+    position:sticky; top:0; z-index:30;
     backdrop-filter:saturate(1.2) blur(8px);
     background:linear-gradient(180deg, rgba(11,13,17,.95), rgba(11,13,17,.75));
     border-bottom:1px solid var(--line);
   }
-  .wrap{max-width:1200px; margin:0 auto; padding:14px 16px}
+  .wrap{max-width:1200px; margin:0 auto; padding:12px 16px}
   .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-
-  h1{margin:0; font-size:18px; letter-spacing:.3px; display:flex; align-items:center; gap:10px}
-  @media (min-width: 720px){ h1{font-size:20px} }
+  h1{margin:0; font-size:18px; display:flex; align-items:center; gap:10px}
   .logo{
     width:28px; height:28px; display:grid; place-items:center; border-radius:8px;
-    background:linear-gradient(135deg, var(--brand), var(--brand-2)); color:#001018; font-weight:900;
-    box-shadow: var(--shadow);
+    background:linear-gradient(135deg,var(--brand),var(--brand-2)); color:#001018; font-weight:900; box-shadow:var(--shadow);
   }
-  .search{
-    flex:1 1 240px; min-width:160px; display:flex; align-items:center; gap:8px;
-    background:var(--panel); padding:10px 12px; border:1px solid var(--line); border-radius:12px;
-  }
-  .search input{
-    width:100%; background:transparent; border:0; color:var(--text); outline:none; font-size:14px;
-  }
-  .btn{
-    appearance:none; border:1px solid var(--line); background:var(--chip); color:var(--text);
-    padding:10px 12px; border-radius:12px; font-weight:600; cursor:pointer;
-    transition: transform .06s ease, filter .12s ease;
-    touch-action: manipulation;
-  }
-  .btn:active{ transform: translateY(1px) }
-  .btn.primary{background:linear-gradient(135deg, var(--brand), var(--brand-2)); color:#07121a; border-color:transparent}
-  .btn.ghost{background:transparent}
-  .icon-btn{ display:grid; place-items:center; padding:10px; aspect-ratio:1/1 }
-  .pill{padding:8px 10px; border:1px dashed var(--line); border-radius:999px; color:var(--muted); font-size:12px}
+  .search{flex:1 1 280px; min-width:180px; display:flex; align-items:center; gap:8px;
+    background:var(--panel); padding:10px 12px; border:1px solid var(--line); border-radius:12px}
+  .search input{width:100%; background:transparent; border:0; color:var(--text); outline:none; font-size:14px}
+  .tabs{display:flex; gap:6px; background:var(--panel); padding:4px; border:1px solid var(--line); border-radius:12px}
+  .tab{padding:8px 12px; border-radius:10px; color:var(--muted); cursor:pointer; user-select:none}
+  .tab.active{background:linear-gradient(135deg,var(--brand),var(--brand-2)); color:#06121a; font-weight:700}
 
-  /* ---------- Layout ---------- */
-  main{
-    max-width:1200px; margin:16px auto; display:grid; grid-template-columns:280px 1fr; gap:16px; padding:0 16px;
-  }
-  @media (max-width: 960px){ main{grid-template-columns:1fr} }
+  main{max-width:1200px; margin:16px auto; padding:0 16px}
+  .pillbar{display:flex; gap:10px; flex-wrap:wrap; margin:8px 0 12px}
+  .pill{padding:8px 12px; border:1px solid var(--line); border-radius:999px; background:var(--chip); color:var(--muted); cursor:pointer}
+  .pill.active{background:linear-gradient(135deg,var(--brand),var(--brand-2)); color:#06121a; border-color:transparent; font-weight:800}
 
-  .panel{
-    background:rgba(18,22,29,.9); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
-  }
+  /* Card grid */
+  .grid{display:grid; gap:12px}
+  @media (min-width:420px){ .grid{grid-template-columns:repeat(2,1fr)} }
+  @media (min-width:720px){ .grid{grid-template-columns:repeat(3,1fr)} }
+  @media (min-width:1000px){ .grid{grid-template-columns:repeat(4,1fr)} }
 
-  /* ---------- Filters ---------- */
-  .filters{padding:14px; position:relative}
+  .card{
+    position:relative; background:var(--panel); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow);
+    overflow:hidden; display:flex; gap:10px; align-items:center; padding:10px;
+  }
+  .badge-big{
+    min-width:64px; height:88px; border-radius:12px; display:grid; place-items:center;
+    background:
+      conic-gradient(from 0deg, #ff70d5, #ffa6d5, #ffd17a, #ff70d5);
+    padding:4px; box-shadow:inset 0 0 0 2px rgba(255,255,255,.15);
+  }
+  .badge-big span{
+    display:grid; place-items:center; width:100%; height:100%; border-radius:10px;
+    background:radial-gradient(120px 120px at 30% 10%, rgba(255,255,255,.25), transparent 40%), #1a0f18;
+    font-weight:900; font-size:20px;
+  }
+  .meta{flex:1}
+  .meta .name{font-weight:800}
+  .rowm{display:flex; gap:8px; align-items:center; flex-wrap:wrap; color:var(--muted); font-size:12px}
+  .chip{font-size:11px; padding:4px 8px; border-radius:999px; background:#0d131c; border:1px solid var(--line)}
+  .ago{position:absolute; right:8px; bottom:8px; font-size:11px; color:var(--muted)}
+
+  /* Database area (same responsive table as before, trimmed) */
+  .panel{background:rgba(18,22,29,.9); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow)}
+  .layout{display:grid; grid-template-columns:280px 1fr; gap:16px}
+  @media (max-width:960px){ .layout{grid-template-columns:1fr} }
+  .filters{padding:14px}
   .filters h2{margin:0 0 10px 0; font-size:14px; color:var(--muted); letter-spacing:.6px; text-transform:uppercase}
-  .grid{display:grid; gap:10px}
   .field label{display:block; font-size:12px; color:var(--muted); margin:6px 2px}
-  .field select, .field input[type="number"], .field input[type="text"], .field input[type="range"]{
-    width:100%; padding:12px; border-radius:12px; background:var(--panel); color:var(--text); border:1px solid var(--line);
-    min-height:44px;  /* touch target */
-  }
+  .field select,.field input[type="number"],.field input[type="range"]{
+    width:100%; padding:12px; border-radius:12px; background:var(--panel); color:var(--text); border:1px solid var(--line); min-height:44px}
   .range-row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
-  .chips{display:flex; gap:8px; flex-wrap:wrap}
-  .chip{background:var(--chip); border:1px solid var(--line); border-radius:999px; padding:6px 10px; font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px}
-  .x{all:unset; cursor:pointer; font-weight:900; padding:4px 8px; border:1px solid var(--line); border-radius:10px; background:var(--chip)}
-
-  /* Mobile filter drawer */
-  #drawerToggle{display:none}
-  @media (max-width: 960px){
-    /* hide sidebar, show toggle */
-    aside.filters{ display:none }
-    #drawerToggle{ display:inline-grid }
-    .drawer{
-      position:fixed; inset:0; display:none; z-index:30;
-      background:rgba(0,0,0,.45); backdrop-filter: blur(3px);
-    }
-    .drawer.open{display:block}
-    .drawer .sheet{
-      position:absolute; left:0; top:0; bottom:0; width:min(92vw, 380px);
-      background:var(--panel); border-right:1px solid var(--line); padding:14px; overflow:auto;
-      animation: slideIn .18s ease-out;
-    }
-    @keyframes slideIn{ from{ transform: translateX(-12px); opacity:.7 } to{ transform:none; opacity:1 } }
-  }
-
-  /* ---------- Table ---------- */
-  .table-wrap{overflow:auto}
-  table{width:100%; border-collapse:separate; border-spacing:0; min-width:920px}
-  thead th{
-    position:sticky; top:0; background:linear-gradient(180deg, rgba(18,22,29,1), rgba(18,22,29,.95));
-    border-bottom:1px solid var(--line); font-size:12px; color:var(--muted); text-align:left; padding:10px; white-space:nowrap;
-    backdrop-filter: blur(6px);
-  }
-  tbody td{padding:12px 10px; border-bottom:1px solid var(--line); font-size:14px}
-  tbody tr:hover{background:rgba(138,148,167,.06)}
-  th.sortable{cursor:pointer}
-  th.sortable .arrow{opacity:.35; margin-left:6px}
-  .tag{font-size:12px; padding:4px 8px; border-radius:999px; background:rgba(90,215,255,.12); border:1px solid rgba(90,215,255,.3); color:#cdefff}
-  .badge{font-weight:800; padding:6px 10px; border-radius:10px; background:#0d131c; border:1px solid var(--line)}
-  .row-top{display:flex; align-items:center; gap:10px}
-  .row-name{font-weight:700}
-  .muted{color:var(--muted)}
   .toolbar{display:flex; gap:8px; align-items:center; padding:10px 12px; border-bottom:1px solid var(--line); flex-wrap:wrap}
   .toolbar .spacer{flex:1}
-  .pagination{display:flex; gap:6px; align-items:center; padding:10px 12px; flex-wrap:wrap}
-  .page-btn{padding:10px 12px; border-radius:12px; border:1px solid var(--line); background:var(--chip); cursor:pointer; min-height:44px}
-
+  .table-wrap{overflow:auto}
+  table{width:100%; border-collapse:separate; border-spacing:0; min-width:920px}
+  thead th{position:sticky; top:0; background:linear-gradient(180deg, rgba(18,22,29,1), rgba(18,22,29,.95));
+    border-bottom:1px solid var(--line); font-size:12px; color:var(--muted); text-align:left; padding:10px; white-space:nowrap}
+  tbody td{padding:12px 10px; border-bottom:1px solid var(--line); font-size:14px}
+  th.sortable{cursor:pointer}
   .statbar{height:8px; background:#10151e; border:1px solid var(--line); border-radius:999px; overflow:hidden}
-  .statbar > i{display:block; height:100%; background:linear-gradient(90deg, var(--ok), var(--brand)); width:0%}
+  .statbar>i{display:block; height:100%; background:linear-gradient(90deg,var(--ok),var(--brand)); width:0%}
 
-  /* ---------- Responsive "stacked card table" ---------- */
-  /* Transform table into cards at small widths (no extra markup needed) */
-  @media (max-width: 720px){
-    table{min-width:0; border-spacing: 0}
+  /* Mobile stacked cards for the table */
+  @media (max-width:720px){
+    table{min-width:0}
     thead{display:none}
-    tbody, tr, td{display:block; width:100%}
-    tbody tr{
-      border:1px solid var(--line);
-      border-radius:14px;
-      margin:10px 0;
-      background:rgba(18,22,29,.9);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    tbody td{
-      display:grid; grid-template-columns:120px 1fr; gap:10px;
-      padding:10px 12px; border-bottom:1px solid var(--line);
-    }
+    tbody,tr,td{display:block;width:100%}
+    tbody tr{border:1px solid var(--line); border-radius:14px; margin:10px 0; background:rgba(18,22,29,.9); box-shadow:var(--shadow)}
+    tbody td{display:grid; grid-template-columns:120px 1fr; gap:10px; padding:10px 12px; border-bottom:1px solid var(--line)}
     tbody td:last-child{border-bottom:none}
-    tbody td::before{
-      content:attr(data-col);
-      color:var(--muted);
-      font-size:12px;
-      align-self:center;
-    }
-    .row-top{gap:6px}
-    .badge{padding:4px 8px}
-    .pagination{justify-content:center}
+    tbody td::before{content:attr(data-col); color:var(--muted); font-size:12px; align-self:center}
   }
 
-  /* ---------- Modal ---------- */
-  .modal{
-    position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.5); backdrop-filter: blur(4px); z-index:40;
-  }
+  /* Modal (unchanged) */
+  .modal{position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.5); backdrop-filter:blur(4px); z-index:40}
   .modal.open{display:grid}
-  .card{
-    width:min(680px, 92vw); background:var(--panel); border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow);
-  }
-  .card header{position:relative}
-  .card header .wrap{display:flex; align-items:center; justify-content:space-between}
-  .card-body{padding:16px}
-  .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
-  @media (max-width:700px){.grid-2{grid-template-columns:1fr}}
-
-  .note{font-size:12px; color:var(--muted)}
+  .card-modal{width:min(680px,92vw); background:var(--panel); border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow)}
+  .card-modal header .wrap{display:flex; align-items:center; justify-content:space-between}
+  .x{all:unset; cursor:pointer; font-weight:900; padding:6px 10px; border:1px solid var(--line); border-radius:10px; background:var(--chip)}
 </style>
 </head>
 <body>
-  <header>
-    <div class="wrap row">
-      <h1><span class="logo">FC</span> EAFC Database</h1>
-
-      <button id="drawerToggle" class="btn icon-btn" title="Filters" aria-label="Open filters">
-        ☰
-      </button>
-
-      <div class="search" role="search" style="flex:1">
-        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 18a8 8 0 1 1 5.292-14.036A8 8 0 0 1 10 18m11.707 2.293l-5.387-5.387A9.956 9.956 0 0 0 20 10a10 10 0 1 0-10 10a9.956 9.956 0 0 0 4.906-1.68l5.387 5.387z"/></svg>
-        <input id="q" placeholder="Search name / club / nation…" inputmode="search" />
-      </div>
-
-      <button class="btn ghost" id="clearBtn" title="Reset all filters">Clear</button>
-      <label class="btn">
-        Import JSON
-        <input type="file" id="fileInput" accept=".json" hidden />
-      </label>
-      <button class="btn" id="exportBtn">Export CSV</button>
-      <span class="pill" id="countPill">0 players</span>
+<header>
+  <div class="wrap row">
+    <h1><span class="logo">FC</span> EAFC Guide</h1>
+    <div class="search" role="search" style="flex:1">
+      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 18a8 8 0 1 1 5.292-14.036A8 8 0 0 1 10 18m11.707 2.293l-5.387-5.387A9.956 9.956 0 0 0 20 10a10 10 0 1 0-10 10a9.956 9.956 0 0 0 4.906-1.68l5.387 5.387z"/></svg>
+      <input id="globalSearch" placeholder="Search players…" inputmode="search" />
     </div>
-  </header>
+    <nav class="tabs" id="navTabs">
+      <button class="tab active" data-view="home">Home</button>
+      <button class="tab" data-view="db">Database</button>
+    </nav>
+  </div>
+</header>
 
-  <main>
-    <!-- Desktop sidebar -->
-    <aside class="panel filters" id="sidebarFilters" aria-label="Filters">
-      <h2>Filters</h2>
-      <div class="grid">
+<main>
+  <!-- HOME: recent releases grid -->
+  <section id="homeView">
+    <div class="pillbar" id="homePills">
+      <button class="pill active" data-filter="popular">Popular</button>
+      <button class="pill" data-filter="new">New Release</button>
+      <button class="pill" data-filter="promo">Latest Promo</button>
+      <button class="pill" data-filter="rating">Highest Rated</button>
+      <button class="pill" data-filter="sm5">5★ Skill</button>
+      <button class="pill" data-filter="wf5">5★ Weak Foot</button>
+    </div>
+    <div class="grid" id="releaseGrid"></div>
+  </section>
+
+  <!-- DATABASE: table + filters -->
+  <section id="dbView" style="display:none">
+    <div class="layout">
+      <aside class="panel filters" aria-label="Filters">
+        <h2>Filters</h2>
         <div class="field">
           <label for="club">Club</label>
           <select id="club"><option value="">Any</option></select>
@@ -230,7 +175,6 @@
         <div class="field">
           <label for="paceMin">Min Pace (PAC)</label>
           <input id="paceMin" type="range" min="1" max="99" value="1" />
-          <div class="chips"><span class="chip"><span id="paceVal">1</span></span></div>
         </div>
         <div class="field">
           <label for="smMin">Min Skill Moves</label>
@@ -240,323 +184,288 @@
           <label for="wfMin">Min Weak Foot</label>
           <select id="wfMin"><option value="1">Any</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
         </div>
-        <div class="field">
-          <label for="rowsPerPage">Rows per page</label>
-          <select id="rowsPerPage"><option>10</option><option selected>25</option><option>50</option><option>100</option></select>
+      </aside>
+
+      <section class="panel">
+        <div class="toolbar">
+          <div id="countPill" class="pill">0 players</div>
+          <div class="spacer"></div>
+          <small class="muted">Tap a header to sort • Tap a row for details</small>
         </div>
-      </div>
-    </aside>
-
-    <!-- Data section -->
-    <section class="panel">
-      <div class="toolbar">
-        <div class="chips" id="activeChips"></div>
-        <div class="spacer"></div>
-        <small class="note">Tap a header to sort • Tap a row for details</small>
-      </div>
-      <div class="table-wrap">
-        <table id="tbl">
-          <thead>
-            <tr>
-              <th class="sortable" data-key="name">Player <span class="arrow">↕</span></th>
-              <th class="sortable" data-key="position">Pos <span class="arrow">↕</span></th>
-              <th class="sortable" data-key="club">Club <span class="arrow">↕</span></th>
-              <th class="sortable" data-key="nation">Nation <span class="arrow">↕</span></th>
-              <th class="sortable" data-key="overall">OVR <span class="arrow">↕</span></th>
-              <th class="sortable" data-key="pace">PAC <span class="arrow">↕</span></th>
-              <th class="sortable" data-key="shooting">SHO <span class="arrow">↕</span></th>
-              <th class="sortable" data-key="passing">PAS <span class="arrow">↕</span></th>
-              <th class="sortable" data-key="dribbling">DRI <span class="arrow">↕</span></th>
-              <th class="sortable" data-key="defending">DEF <span class="arrow">↕</span></th>
-              <th class="sortable" data-key="physical">PHY <span class="arrow">↕</span></th>
-            </tr>
-          </thead>
-          <tbody id="tbody"></tbody>
-        </table>
-      </div>
-      <div class="pagination" id="pager"></div>
-    </section>
-  </main>
-
-  <!-- Mobile Filters Drawer -->
-  <div class="drawer" id="drawer" aria-hidden="true">
-    <div class="sheet">
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px">
-        <h2 style="margin:0; font-size:14px; color:var(--muted); letter-spacing:.6px; text-transform:uppercase">Filters</h2>
-        <button class="x" id="closeDrawer" aria-label="Close filters">✕</button>
-      </div>
-      <!-- We’ll clone the desktop filters into this sheet for consistency -->
-      <div id="drawerFilters"></div>
-      <div style="display:flex; gap:8px; margin-top:10px">
-        <button class="btn primary" id="applyDrawer">Apply</button>
-        <button class="btn" id="resetDrawer">Reset</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal -->
-  <div class="modal" id="modal" aria-hidden="true">
-    <div class="card">
-      <header>
-        <div class="wrap" style="padding:12px 14px">
-          <h3 style="margin:0; font-size:18px">Player Details</h3>
-          <button class="x" id="closeModal" aria-label="Close">✕</button>
+        <div class="table-wrap">
+          <table id="tbl">
+            <thead>
+              <tr>
+                <th class="sortable" data-key="name">Player</th>
+                <th class="sortable" data-key="position">Pos</th>
+                <th class="sortable" data-key="club">Club</th>
+                <th class="sortable" data-key="nation">Nation</th>
+                <th class="sortable" data-key="overall">OVR</th>
+                <th class="sortable" data-key="pace">PAC</th>
+                <th class="sortable" data-key="shooting">SHO</th>
+                <th class="sortable" data-key="passing">PAS</th>
+                <th class="sortable" data-key="dribbling">DRI</th>
+                <th class="sortable" data-key="defending">DEF</th>
+                <th class="sortable" data-key="physical">PHY</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
         </div>
-      </header>
-      <div class="card-body" id="modalBody"></div>
+        <div class="toolbar" id="pager"></div>
+      </section>
     </div>
+  </section>
+</main>
+
+<!-- Modal -->
+<div class="modal" id="modal" aria-hidden="true">
+  <div class="card-modal">
+    <header>
+      <div class="wrap" style="padding:12px 14px">
+        <h3 style="margin:0; font-size:18px">Player Details</h3>
+        <button class="x" id="closeModal" aria-label="Close">✕</button>
+      </div>
+    </header>
+    <div class="wrap" id="modalBody" style="padding:16px"></div>
   </div>
+</div>
 
 <script>
-/* ======== SAMPLE DATA (replace or import JSON) ======== */
-let players = [
-  {id:1, name:"Kylian Mbappé", position:"ST", club:"Real Madrid", nation:"France", overall:92, pace:97, shooting:91, passing:82, dribbling:93, defending:39, physical:79, skillMoves:5, weakFoot:4, workRate:"High/Low", age:26, height:"178 cm", weight:"73 kg", foot:"Right"},
-  {id:2, name:"Erling Haaland", position:"ST", club:"Manchester City", nation:"Norway", overall:92, pace:89, shooting:95, passing:75, dribbling:82, defending:45, physical:93, skillMoves:3, weakFoot:4, workRate:"High/Medium", age:25, height:"195 cm", weight:"94 kg", foot:"Left"},
-  {id:3, name:"Kevin De Bruyne", position:"CAM", club:"Manchester City", nation:"Belgium", overall:91, pace:74, shooting:88, passing:94, dribbling:87, defending:64, physical:78, skillMoves:4, weakFoot:5, workRate:"High/High", age:34, height:"181 cm", weight:"68 kg", foot:"Right"},
-  {id:4, name:"Jude Bellingham", position:"CM", club:"Real Madrid", nation:"England", overall:91, pace:82, shooting:86, passing:86, dribbling:88, defending:78, physical:84, skillMoves:4, weakFoot:4, workRate:"High/High", age:22, height:"186 cm", weight:"75 kg", foot:"Right"},
-  {id:5, name:"Lionel Messi", position:"RW", club:"Inter Miami", nation:"Argentina", overall:90, pace:75, shooting:90, passing:92, dribbling:94, defending:34, physical:65, skillMoves:4, weakFoot:4, workRate:"Low/Low", age:38, height:"170 cm", weight:"72 kg", foot:"Left"},
-  {id:6, name:"Vinícius Jr.", position:"LW", club:"Real Madrid", nation:"Brazil", overall:90, pace:95, shooting:85, passing:79, dribbling:92, defending:35, physical:72, skillMoves:5, weakFoot:4, workRate:"High/Medium", age:25, height:"176 cm", weight:"73 kg", foot:"Right"},
-  {id:7, name:"Mohamed Salah", position:"RW", club:"Liverpool", nation:"Egypt", overall:89, pace:89, shooting:90, passing:82, dribbling:90, defending:45, physical:76, skillMoves:4, weakFoot:3, workRate:"High/Medium", age:33, height:"175 cm", weight:"71 kg", foot:"Left"},
-  {id:8, name:"Karim Benzema", position:"CF", club:"Al-Ittihad", nation:"France", overall:88, pace:76, shooting:90, passing:83, dribbling:88, defending:40, physical:79, skillMoves:4, weakFoot:4, workRate:"Medium/Low", age:37, height:"185 cm", weight:"81 kg", foot:"Right"},
-  {id:9, name:"Rodri", position:"CDM", club:"Manchester City", nation:"Spain", overall:90, pace:66, shooting:84, passing:88, dribbling:82, defending:86, physical:84, skillMoves:3, weakFoot:4, workRate:"Medium/High", age:29, height:"191 cm", weight:"82 kg", foot:"Right"},
-  {id:10, name:"Virgil van Dijk", position:"CB", club:"Liverpool", nation:"Netherlands", overall:89, pace:75, shooting:60, passing:71, dribbling:72, defending:90, physical:86, skillMoves:2, weakFoot:3, workRate:"Medium/High", age:34, height:"193 cm", weight:"92 kg", foot:"Right"},
-  {id:11, name:"Pedri", position:"CM", club:"Barcelona", nation:"Spain", overall:88, pace:78, shooting:74, passing:87, dribbling:90, defending:67, physical:69, skillMoves:4, weakFoot:4, workRate:"High/High", age:22, height:"174 cm", weight:"60 kg", foot:"Right"},
-  {id:12, name:"Jamal Musiala", position:"CAM", club:"Bayern Munich", nation:"Germany", overall:89, pace:87, shooting:82, passing:84, dribbling:93, defending:55, physical:68, skillMoves:5, weakFoot:4, workRate:"High/Medium", age:22, height:"184 cm", weight:"70 kg", foot:"Right"},
-  {id:13, name:"Bukayo Saka", position:"RW", club:"Arsenal", nation:"England", overall:88, pace:86, shooting:85, passing:84, dribbling:89, defending:60, physical:73, skillMoves:4, weakFoot:4, workRate:"High/Medium", age:23, height:"178 cm", weight:"72 kg", foot:"Left"},
-  {id:14, name:"Harry Kane", position:"ST", club:"Bayern Munich", nation:"England", overall:91, pace:74, shooting:94, passing:86, dribbling:84, defending:48, physical:86, skillMoves:4, weakFoot:5, workRate:"High/High", age:32, height:"188 cm", weight:"86 kg", foot:"Right"},
-  {id:15, name:"Thibaut Courtois", position:"GK", club:"Real Madrid", nation:"Belgium", overall:90, pace:55, shooting:25, passing:75, dribbling:45, defending:52, physical:80, skillMoves:1, weakFoot:3, workRate:"Medium/Medium", age:33, height:"200 cm", weight:"96 kg", foot:"Left"}
+/* ======== DATA (example seed; in production, replace with your live feed) ======== */
+const releases = [
+  // id, rating, name, pos, club, nation, promo, skill, wf, releasedAt (ISO string), popularScore
+  {id:101, rating:98, name:"Bakayoko", pos:"RW", club:"PSV", nation:"Belgium", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(0.3), pop:95},
+  {id:102, rating:98, name:"Noa Lang", pos:"LW", club:"PSV", nation:"Netherlands", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(1), pop:91},
+  {id:103, rating:98, name:"Luis Díaz", pos:"LW", club:"Liverpool", nation:"Colombia", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(2), pop:96},
+  {id:104, rating:98, name:"Justin Kluivert", pos:"ST", club:"Bournemouth", nation:"Netherlands", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(2), pop:89},
+  {id:105, rating:98, name:"Cherki", pos:"CAM", club:"Lyon", nation:"France", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(3), pop:92},
+  {id:106, rating:98, name:"Edin Džeko", pos:"ST", club:"Fenerbahçe", nation:"Bosnia", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(3), pop:87},
+  {id:107, rating:98, name:"Quansah", pos:"CB", club:"Liverpool", nation:"England", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(3), pop:83},
+  {id:108, rating:98, name:"Johnny", pos:"CDM", club:"Real Betis", nation:"Brazil", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(5), pop:80},
+  {id:109, rating:98, name:"Olga Carmona", pos:"LB", club:"Real Madrid F.", nation:"Spain", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(5), pop:86},
+  {id:110, rating:98, name:"Joan García", pos:"GK", club:"Espanyol", nation:"Spain", promo:"Festival", sm:3, wf:3, releasedAt:daysAgo(5), pop:74},
+  {id:111, rating:98, name:"Simon", pos:"LM", club:"Nantes", nation:"Nigeria", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(5), pop:88},
+  {id:112, rating:99, name:"Ronaldinho", pos:"LW", club:"Icons", nation:"Brazil", promo:"Icon Moments", sm:5, wf:5, releasedAt:daysAgo(7), pop:99}
 ];
+
+const players = releases.map(r => ({
+  id:r.id, name:r.name, position:r.pos, club:r.club, nation:r.nation,
+  overall:r.rating, pace:90, shooting:88, passing:87, dribbling:93, defending:50, physical:80,
+  skillMoves:r.sm, weakFoot:r.wf, workRate:"High/Medium", foot:"Right", age:"—", height:"—", weight:"—"
+}));
 
 /* ======== STATE ======== */
 let state = {
-  q: "", club:"", nation:"", pos:"",
-  ovrMin:1, ovrMax:99, paceMin:1, smMin:1, wfMin:1,
+  view:"home",
+  homeFilter:"popular",
+  q:"",
+  // db filters
+  club:"", nation:"", pos:"", ovrMin:1, ovrMax:99, paceMin:1, smMin:1, wfMin:1,
   sortKey:"overall", sortDir:"desc",
   page:1, rowsPerPage:25,
   data:[...players], filtered:[]
 };
 
-/* ======== ELEMENTS ======== */
-const $ = sel => document.querySelector(sel);
-const $$ = sel => document.querySelectorAll(sel);
-const tbody = $("#tbody"), thead = $("#tbl thead"), pager = $("#pager");
-const countPill = $("#countPill"), activeChips = $("#activeChips");
-
-/* ======== INIT ======== */
-init();
-function init(){
-  // Populate selects
-  fillSelect("#club", unique(players.map(p=>p.club)));
-  fillSelect("#nation", unique(players.map(p=>p.nation)));
-  // Clone filters into drawer for mobile (kept in sync because we operate on #sidebarFilters controls)
-  $("#drawerFilters").append($("#sidebarFilters").cloneNode(true).querySelector(".grid"));
-
-  bindInputs();
-  applyFilters();
-  render();
+/* ======== HELPERS ======== */
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+function daysAgo(d){ const t=new Date(); t.setTime(t.getTime()-d*24*3600*1000); return t.toISOString(); }
+function timeAgo(iso){
+  const sec=(Date.now()-new Date(iso).getTime())/1000;
+  const d=Math.floor(sec/86400), h=Math.floor((sec%86400)/3600);
+  if(d>=1) return d+" days ago"; if(h>=1) return h+" hours ago"; return "Just now";
 }
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
 
-function fillSelect(sel, opts){
-  const el = $(sel);
-  for(const o of opts.sort((a,b)=>a.localeCompare(b))) {
-    const op = document.createElement("option"); op.textContent = o; el.appendChild(op);
-  }
-}
+/* ======== NAV ======== */
+$("#navTabs").addEventListener("click",(e)=>{
+  const b=e.target.closest(".tab"); if(!b) return;
+  $$(".tab").forEach(t=>t.classList.remove("active")); b.classList.add("active");
+  state.view=b.dataset.view;
+  $("#homeView").style.display= state.view==="home"?"block":"none";
+  $("#dbView").style.display  = state.view==="db"  ?"block":"none";
+});
 
-function bindInputs(){
-  $("#q").addEventListener("input", e => { state.q = e.target.value.trim().toLowerCase(); state.page=1; renderFiltered(); });
-  $("#club").addEventListener("change", e => { state.club = e.target.value; state.page=1; renderFiltered(); });
-  $("#nation").addEventListener("change", e => { state.nation = e.target.value; state.page=1; renderFiltered(); });
-  $("#pos").addEventListener("change", e => { state.pos = e.target.value; state.page=1; renderFiltered(); });
-  $("#ovrMin").addEventListener("input", e => { state.ovrMin = +e.target.value||1; clampOVR(); renderFiltered(); });
-  $("#ovrMax").addEventListener("input", e => { state.ovrMax = +e.target.value||99; clampOVR(); renderFiltered(); });
-  $("#paceMin").addEventListener("input", e => { state.paceMin = +e.target.value; $("#paceVal").textContent = state.paceMin; state.page=1; renderFiltered(); });
-  $("#smMin").addEventListener("change", e => { state.smMin = +e.target.value; state.page=1; renderFiltered(); });
-  $("#wfMin").addEventListener("change", e => { state.wfMin = +e.target.value; state.page=1; renderFiltered(); });
-  $("#rowsPerPage").addEventListener("change", e => { state.rowsPerPage = +e.target.value; state.page=1; render(); });
-  $("#clearBtn").addEventListener("click", resetAll);
-  $("#exportBtn").addEventListener("click", exportCSV);
-  $("#fileInput").addEventListener("change", importJSON);
-  $("#closeModal").addEventListener("click", closeModal);
-  $("#modal").addEventListener("click", e => { if(e.target.id==="modal") closeModal(); });
+/* ======== GLOBAL SEARCH (both views) ======== */
+$("#globalSearch").addEventListener("input", e=>{
+  state.q = e.target.value.trim().toLowerCase();
+  if(state.view==="home") renderHome();
+  else { state.page=1; applyDbFilters(); renderDb(); }
+});
 
-  thead.addEventListener("click", e=>{
-    const th = e.target.closest("th.sortable"); if(!th) return;
-    const key = th.dataset.key;
-    if(state.sortKey === key) state.sortDir = (state.sortDir==="asc"?"desc":"asc");
-    else { state.sortKey = key; state.sortDir = "desc"; }
-    render();
-  });
+/* ======== HOME (releases grid) ======== */
+$("#homePills").addEventListener("click",(e)=>{
+  const p=e.target.closest(".pill"); if(!p) return;
+  $$("#homePills .pill").forEach(x=>x.classList.remove("active")); p.classList.add("active");
+  state.homeFilter=p.dataset.filter;
+  renderHome();
+});
 
-  // Drawer controls (mobile)
-  const drawer = $("#drawer");
-  $("#drawerToggle").addEventListener("click", ()=>openDrawer());
-  $("#closeDrawer").addEventListener("click", ()=>closeDrawer());
-  drawer.addEventListener("click", (e)=>{ if(e.target.id==="drawer") closeDrawer(); });
-  $("#applyDrawer").addEventListener("click", ()=>{
-    // Read values from drawer inputs (they share the same IDs thanks to clone)
-    syncDrawerToSidebar();
-    closeDrawer();
-    renderFiltered();
-  });
-  $("#resetDrawer").addEventListener("click", ()=>{
-    resetAll(false);
-    closeDrawer();
-  });
-
-  // Accessibility: ESC closes modal/drawer
-  window.addEventListener("keydown", (e)=>{
-    if(e.key === "Escape"){ closeModal(); closeDrawer(); }
-  });
-}
-
-function syncDrawerToSidebar(){
-  // Get all ids we manage
-  const ids = ["club","nation","pos","ovrMin","ovrMax","paceMin","smMin","wfMin","rowsPerPage"];
-  for(const id of ids){
-    const d = document.querySelector(`#drawerFilters #${id}`) || document.querySelector(`#drawer #${id}`);
-    const s = document.querySelector(`#sidebarFilters #${id}`);
-    if(d && s){ s.value = d.value; s.dispatchEvent(new Event(s.tagName==="INPUT"?"input":"change")); }
-  }
-}
-
-function openDrawer(){
-  // Copy current values into the drawer controls each time
-  const ids = ["club","nation","pos","ovrMin","ovrMax","paceMin","smMin","wfMin","rowsPerPage"];
-  for(const id of ids){
-    const s = document.querySelector(`#sidebarFilters #${id}`);
-    const d = document.querySelector(`#drawerFilters #${id}`) || document.querySelector(`#drawer #${id}`);
-    if(s && d){ d.value = s.value; if(d.id==="paceMin") $("#paceVal").textContent = d.value; }
-  }
-  $("#drawer").classList.add("open");
-  $("#drawer").setAttribute("aria-hidden","false");
-}
-function closeDrawer(){
-  $("#drawer").classList.remove("open");
-  $("#drawer").setAttribute("aria-hidden","true");
-}
-
-function clampOVR(){
-  if(state.ovrMin>state.ovrMax){ const t=state.ovrMin; state.ovrMin=state.ovrMax; state.ovrMax=t; }
-  $("#ovrMin").value = state.ovrMin; $("#ovrMax").value = state.ovrMax;
-}
-
-/* ======== FILTER / SORT / PAGINATE ======== */
-function matches(p){
-  const hay = (p.name+" "+p.club+" "+p.nation).toLowerCase();
+function homeFilterFn(r){
+  // text match
+  const hay=(r.name+" "+r.club+" "+r.nation+" "+r.promo).toLowerCase();
   if(state.q && !hay.includes(state.q)) return false;
-  if(state.club && p.club !== state.club) return false;
-  if(state.nation && p.nation !== state.nation) return false;
-  if(state.pos && p.position !== state.pos) return false;
-  if((+p.overall||0) < state.ovrMin || (+p.overall||0) > state.ovrMax) return false;
-  if((+p.pace||0) < state.paceMin) return false;
-  if((+p.skillMoves||0) < state.smMin) return false;
-  if((+p.weakFoot||0) < state.wfMin) return false;
-  return true;
-}
-function renderFiltered(){ applyFilters(); render(); }
-function applyFilters(){
-  state.filtered = state.data.filter(matches);
-  const k = state.sortKey, dir = state.sortDir === "asc" ? 1 : -1;
-  state.filtered.sort((a,b)=> {
-    const va = (a[k]??""); const vb = (b[k]??"");
-    if(typeof va === "number" && typeof vb === "number") return (va - vb) * dir;
-    return String(va).localeCompare(String(vb)) * dir;
-  });
-}
-function render(){
-  countPill.textContent = `${state.filtered.length} players`;
-  renderChips();
 
-  // Pagination
-  const total = state.filtered.length, rpp = state.rowsPerPage;
-  const pages = Math.max(1, Math.ceil(total / rpp));
-  if(state.page>pages) state.page = pages;
-  const start = (state.page - 1) * rpp;
-  const pageSlice = state.filtered.slice(start, start + rpp);
-
-  // Rows
-  tbody.innerHTML = pageSlice.map(rowHTML).join("");
-
-  // Pager
-  pager.innerHTML = `
-    <button class="page-btn" ${state.page===1?"disabled":""} data-act="prev" aria-label="Previous page">Prev</button>
-    <span class="muted">Page ${state.page} of ${pages}</span>
-    <button class="page-btn" ${state.page===pages?"disabled":""} data-act="next" aria-label="Next page">Next</button>
-  `;
-  pager.onclick = e=>{
-    const act = e.target.dataset.act;
-    if(act==="prev" && state.page>1){ state.page--; render(); }
-    if(act==="next" && state.page<pages){ state.page++; render(); }
+  switch(state.homeFilter){
+    case "popular": return true; // we'll sort by popularity
+    case "new": return true;     // we'll sort by newest
+    case "promo": return /promo|festival|icon/i.test(r.promo);
+    case "rating": return true;  // sort by rating
+    case "sm5": return r.sm>=5;
+    case "wf5": return r.wf>=5;
+    default: return true;
   }
+}
 
-  // Bind row clicks
-  $$("#tbody tr").forEach(tr=>{
-    tr.addEventListener("click", ()=>{
-      const id = +tr.dataset.id;
-      const p = state.filtered.find(x=>x.id===id);
+function homeSort(a,b){
+  if(state.homeFilter==="popular") return (b.pop||0)-(a.pop||0);
+  if(state.homeFilter==="new")     return new Date(b.releasedAt)-new Date(a.releasedAt);
+  if(state.homeFilter==="rating")  return (b.rating||0)-(a.rating||0);
+  // default: newest first
+  return new Date(b.releasedAt)-new Date(a.releasedAt);
+}
+
+function renderHome(){
+  const grid=$("#releaseGrid");
+  const items=releases.filter(homeFilterFn).sort(homeSort);
+  grid.innerHTML = items.map(r=>`
+    <article class="card" role="button" aria-label="${esc(r.name)}" data-id="${r.id}">
+      <div class="badge-big"><span>${r.rating}</span></div>
+      <div class="meta">
+        <div class="name">${esc(r.name)} <span class="chip">${esc(r.pos)}</span></div>
+        <div class="rowm">
+          <span>${esc(r.club)}</span> • <span>${esc(r.nation)}</span>
+        </div>
+        <div class="rowm">
+          <span class="chip">R: ${esc(r.promo)}</span>
+          <span class="chip">SM ${r.sm}★</span>
+          <span class="chip">WF ${r.wf}★</span>
+        </div>
+      </div>
+      <div class="ago">${esc(timeAgo(r.releasedAt))}</div>
+    </article>
+  `).join("");
+
+  // open modal from a card
+  $$("#releaseGrid .card").forEach(card=>{
+    card.addEventListener("click", ()=>{
+      const id = +card.dataset.id;
+      const p = players.find(x=>x.id===id);
       openModal(p);
     });
   });
 }
 
-function rowHTML(p){
-  // Each td includes a data-col label for mobile "stacked cards"
-  return `<tr data-id="${p.id}">
-    <td data-col="Player">
-      <div class="row-top"><span class="row-name">${esc(p.name)}</span> <span class="tag">${esc(p.workRate||"")}</span></div>
-      <div class="muted" style="font-size:12px">SM ${p.skillMoves}★ • WF ${p.weakFoot}★ • ${esc(p.foot||"")}</div>
-    </td>
-    <td data-col="Pos"><span class="badge">${esc(p.position)}</span></td>
-    <td data-col="Club">${esc(p.club)}</td>
-    <td data-col="Nation">${esc(p.nation)}</td>
-    <td data-col="OVR"><b>${num(p.overall)}</b></td>
-    <td data-col="PAC">${stat(p.pace)}</td>
-    <td data-col="SHO">${stat(p.shooting)}</td>
-    <td data-col="PAS">${stat(p.passing)}</td>
-    <td data-col="DRI">${stat(p.dribbling)}</td>
-    <td data-col="DEF">${stat(p.defending)}</td>
-    <td data-col="PHY">${stat(p.physical)}</td>
-  </tr>`;
-}
+/* ======== DATABASE (table) ======== */
+function initDb(){
+  // Fill selects
+  fillSelect("#club", [...new Set(players.map(p=>p.club))].filter(Boolean));
+  fillSelect("#nation", [...new Set(players.map(p=>p.nation))].filter(Boolean));
 
-function stat(v){
-  const val = clamp(+v||0, 1, 99);
-  return `<div class="statbar" aria-label="${val}"><i style="width:${val}%"></i></div>`;
-}
+  // Bind inputs
+  $("#club").addEventListener("change", e=>{ state.club=e.target.value; state.page=1; applyDbFilters(); renderDb(); });
+  $("#nation").addEventListener("change", e=>{ state.nation=e.target.value; state.page=1; applyDbFilters(); renderDb(); });
+  $("#pos").addEventListener("change", e=>{ state.pos=e.target.value; state.page=1; applyDbFilters(); renderDb(); });
+  $("#ovrMin").addEventListener("input", e=>{ state.ovrMin=+e.target.value||1; clampOvr(); applyDbFilters(); renderDb(); });
+  $("#ovrMax").addEventListener("input", e=>{ state.ovrMax=+e.target.value||99; clampOvr(); applyDbFilters(); renderDb(); });
+  $("#paceMin").addEventListener("input", e=>{ state.paceMin=+e.target.value||1; state.page=1; applyDbFilters(); renderDb(); });
+  $("#smMin").addEventListener("change", e=>{ state.smMin=+e.target.value||1; state.page=1; applyDbFilters(); renderDb(); });
+  $("#wfMin").addEventListener("change", e=>{ state.wfMin=+e.target.value||1; state.page=1; applyDbFilters(); renderDb(); });
 
-function renderChips(){
-  const chips = [];
-  if(state.q) chips.push(ch("Search", state.q, ()=>{$("#q").value=""; state.q=""; renderFiltered();}));
-  if(state.club) chips.push(ch("Club", state.club, ()=>{$("#club").value=""; state.club=""; renderFiltered();}));
-  if(state.nation) chips.push(ch("Nation", state.nation, ()=>{$("#nation").value=""; state.nation=""; renderFiltered();}));
-  if(state.pos) chips.push(ch("Pos", state.pos, ()=>{$("#pos").value=""; state.pos=""; renderFiltered();}));
-  if(state.ovrMin>1 || state.ovrMax<99) chips.push(ch("OVR", `${state.ovrMin}–${state.ovrMax}`, ()=>{
-    state.ovrMin=1; state.ovrMax=99; $("#ovrMin").value=1; $("#ovrMax").value=99; renderFiltered();
-  }));
-  if(state.paceMin>1) chips.push(ch("PAC ≥", state.paceMin, ()=>{
-    state.paceMin=1; $("#paceMin").value=1; $("#paceVal").textContent='1'; renderFiltered();
-  }));
-  if(state.smMin>1) chips.push(ch("SM ≥", state.smMin, ()=>{$("#smMin").value="1"; state.smMin=1; renderFiltered();}));
-  if(state.wfMin>1) chips.push(ch("WF ≥", state.wfMin, ()=>{$("#wfMin").value="1"; state.wfMin=1; renderFiltered();}));
-  activeChips.innerHTML = chips.join("");
-}
-function ch(label, value, onClose){
-  const id = "chip-"+Math.random().toString(36).slice(2);
-  queueMicrotask(()=>{
-    const x = document.getElementById(id);
-    x?.addEventListener("click", onClose);
+  $("#tbl thead").addEventListener("click", e=>{
+    const th=e.target.closest("th.sortable"); if(!th) return;
+    const k=th.dataset.key;
+    if(state.sortKey===k) state.sortDir = state.sortDir==="asc"?"desc":"asc";
+    else { state.sortKey=k; state.sortDir="desc"; }
+    renderDb();
   });
-  return `<span class="chip">${esc(label)}: ${esc(String(value))} <button id="${id}" class="x" style="border:none;padding:2px 6px">x</button></span>`;
+
+  applyDbFilters();
+  renderDb();
 }
+function fillSelect(sel, opts){
+  const el=$(sel); (opts||[]).sort((a,b)=>a.localeCompare(b)).forEach(o=>{
+    const op=document.createElement("option"); op.textContent=o; el.appendChild(op);
+  });
+}
+function clampOvr(){ if(state.ovrMin>state.ovrMax){ const t=state.ovrMin; state.ovrMin=state.ovrMax; state.ovrMax=t; } }
+function matches(p){
+  const hay=(p.name+" "+p.club+" "+p.nation).toLowerCase();
+  if(state.q && !hay.includes(state.q)) return false;
+  if(state.club && p.club!==state.club) return false;
+  if(state.nation && p.nation!==state.nation) return false;
+  if(state.pos && p.position!==state.pos) return false;
+  if((+p.overall||0)<state.ovrMin || (+p.overall||0)>state.ovrMax) return false;
+  if((+p.pace||0)<state.paceMin) return false;
+  if((+p.skillMoves||0)<state.smMin) return false;
+  if((+p.weakFoot||0)<state.wfMin) return false;
+  return true;
+}
+function applyDbFilters(){
+  state.filtered = players.filter(matches);
+  const dir = state.sortDir==="asc"?1:-1, k=state.sortKey;
+  state.filtered.sort((a,b)=>{
+    const va=a[k]??"", vb=b[k]??"";
+    if(typeof va === "number" && typeof vb === "number") return (va-vb)*dir;
+    return String(va).localeCompare(String(vb))*dir;
+  });
+}
+function renderDb(){
+  $("#countPill").textContent = `${state.filtered.length} players`;
+  const tbody=$("#tbody"); const pager=$("#pager");
+  const rpp=25, total=state.filtered.length, pages=Math.max(1,Math.ceil(total/rpp));
+  if(state.page>pages) state.page=pages;
+  const start=(state.page-1)*rpp;
+  const pageSlice=state.filtered.slice(start,start+rpp);
+
+  tbody.innerHTML = pageSlice.map(p=>`
+    <tr data-id="${p.id}">
+      <td data-col="Player">
+        <div><b>${esc(p.name)}</b> <span class="chip">${esc(p.position)}</span></div>
+        <div class="muted" style="font-size:12px">SM ${p.skillMoves}★ • WF ${p.weakFoot}★</div>
+      </td>
+      <td data-col="Pos">${esc(p.position)}</td>
+      <td data-col="Club">${esc(p.club)}</td>
+      <td data-col="Nation">${esc(p.nation)}</td>
+      <td data-col="OVR"><b>${p.overall}</b></td>
+      <td data-col="PAC">${stat(p.pace)}</td>
+      <td data-col="SHO">${stat(p.shooting)}</td>
+      <td data-col="PAS">${stat(p.passing)}</td>
+      <td data-col="DRI">${stat(p.dribbling)}</td>
+      <td data-col="DEF">${stat(p.defending)}</td>
+      <td data-col="PHY">${stat(p.physical)}</td>
+    </tr>
+  `).join("");
+
+  pager.innerHTML = `
+    <button class="x" ${state.page===1?"disabled":""} data-act="prev">Prev</button>
+    <span class="muted">Page ${state.page} of ${pages}</span>
+    <button class="x" ${state.page===pages?"disabled":""} data-act="next">Next</button>
+  `;
+  pager.onclick = e=>{
+    const act = e.target.dataset.act;
+    if(act==="prev" && state.page>1){ state.page--; renderDb(); }
+    if(act==="next" && state.page<pages){ state.page++; renderDb(); }
+  };
+  $$("#tbody tr").forEach(tr=>{
+    tr.addEventListener("click", ()=>{
+      const id=+tr.dataset.id;
+      const p=players.find(x=>x.id===id);
+      openModal(p);
+    });
+  });
+}
+function stat(v){ const val=clamp(+v||0,1,99); return `<div class="statbar" aria-label="${val}"><i style="width:${val}%"></i></div>`; }
 
 /* ======== MODAL ======== */
 function openModal(p){
-  const el = $("#modalBody");
+  const el=$("#modalBody");
   el.innerHTML = `
-    <div class="grid-2">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px">
       <div>
-        <h3 style="margin:0 0 4px 0">${esc(p.name)} <span class="badge">${esc(p.position)}</span></h3>
+        <h3 style="margin:0 0 4px 0">${esc(p.name)} <span class="chip">${esc(p.position)}</span></h3>
         <div class="muted">${esc(p.club)} • ${esc(p.nation)}</div>
         <div style="margin:10px 0; display:grid; grid-template-columns:1fr 1fr; gap:8px">
           ${detailStat("Overall", p.overall)}
@@ -574,124 +483,20 @@ function openModal(p){
           ${fact("Weak Foot", p.weakFoot+"★")}
           ${fact("Work Rate", p.workRate)}
           ${fact("Preferred Foot", p.foot)}
-          ${fact("Age", p.age)}
-          ${fact("Height", p.height)}
-          ${fact("Weight", p.weight)}
         </div>
       </div>
-    </div>
-    <p class="note" style="margin-top:12px">Tip: Use “Export CSV” to download the current filtered+sorted view. Import a JSON file with an array of players using the same keys as shown above.</p>
-  `;
-  $("#modal").classList.add("open");
-  $("#modal").setAttribute("aria-hidden","false");
+    </div>`;
+  $("#modal").classList.add("open"); $("#modal").setAttribute("aria-hidden","false");
 }
-function closeModal(){
-  $("#modal").classList.remove("open");
-  $("#modal").setAttribute("aria-hidden","true");
-}
-function detailStat(label, val){
-  val = clamp(+val||0,1,99);
-  return `<div><div class="muted" style="font-size:12px">${esc(label)}</div>
-    <div style="display:flex; align-items:center; gap:8px"><b>${val}</b>
-    <div class="statbar" style="flex:1"><i style="width:${val}%"></i></div></div></div>`;
-}
+$("#closeModal").addEventListener("click", closeModal);
+$("#modal").addEventListener("click", e=>{ if(e.target.id==="modal") closeModal(); });
+function closeModal(){ $("#modal").classList.remove("open"); $("#modal").setAttribute("aria-hidden","true"); }
+function detailStat(label, val){ val=clamp(+val||0,1,99); return `<div><div class="muted" style="font-size:12px">${esc(label)}</div><div style="display:flex; align-items:center; gap:8px"><b>${val}</b><div class="statbar" style="flex:1"><i style="width:${val}%"></i></div></div></div>`; }
 function fact(label, val){ return `<div><div class="muted" style="font-size:12px">${esc(label)}</div><div>${esc(val??"-")}</div></div>`; }
 
-/* ======== IMPORT / EXPORT ======== */
-function importJSON(ev){
-  const file = ev.target.files?.[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    try{
-      const arr = JSON.parse(reader.result);
-      if(!Array.isArray(arr)) throw new Error("JSON root must be an array");
-      // Basic normalization
-      let idSeed = Date.now();
-      players = arr.map((p,i)=>({
-        id: p.id ?? (++idSeed),
-        name: p.name ?? "Unknown",
-        position: p.position ?? p.pos ?? "-",
-        club: p.club ?? "-",
-        nation: p.nation ?? "-",
-        overall: toNum(p.overall ?? p.ovr),
-        pace: toNum(p.pace ?? p.pac),
-        shooting: toNum(p.shooting ?? p.sho),
-        passing: toNum(p.passing ?? p.pas),
-        dribbling: toNum(p.dribbling ?? p.dri),
-        defending: toNum(p.defending ?? p.def),
-        physical: toNum(p.physical ?? p.phy),
-        skillMoves: toNum(p.skillMoves ?? p.sm ?? 1),
-        weakFoot: toNum(p.weakFoot ?? p.wf ?? 1),
-        workRate: p.workRate ?? p.work_rate ?? "",
-        age: p.age ?? "", height: p.height ?? "", weight: p.weight ?? "", foot: p.foot ?? p.footed ?? ""
-      }));
-      state.data = [...players];
-      // Refill selects with new values
-      $("#club").innerHTML = '<option value="">Any</option>';
-      $("#nation").innerHTML = '<option value="">Any</option>';
-      fillSelect("#club", unique(players.map(p=>p.club)));
-      fillSelect("#nation", unique(players.map(p=>p.nation)));
-      resetAll(false);
-      toast("Import successful");
-    }catch(err){
-      alert("Import failed: " + err.message);
-    }
-    ev.target.value = ""; // reset input
-  };
-  reader.readAsText(file);
-}
-
-function exportCSV(){
-  const rows = state.filtered.slice((state.page-1)*state.rowsPerPage, (state.page-1)*state.rowsPerPage + state.rowsPerPage);
-  const headers = ["Name","Position","Club","Nation","Overall","Pace","Shooting","Passing","Dribbling","Defending","Physical","SkillMoves","WeakFoot","WorkRate","Age","Height","Weight","Foot"];
-  const csv = [headers.join(",")]
-    .concat(rows.map(p=>[
-      p.name, p.position, p.club, p.nation, p.overall, p.pace, p.shooting, p.passing, p.dribbling, p.defending, p.physical, p.skillMoves, p.weakFoot, p.workRate, p.age, p.height, p.weight, p.foot
-    ].map(csvCell).join(",")))
-    .join("\n");
-  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
-  const url = URL.createObjectURL(blob);
-  const a = Object.assign(document.createElement("a"), {href:url, download:"eafc-database.csv"});
-  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-}
-
-/* ======== UTIL ======== */
-function unique(arr){ return [...new Set(arr.filter(Boolean))]; }
-function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
-function num(x){ const n=+x||0; return n.toFixed(0); }
-function esc(s){ return String(s??"").replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
-function csvCell(s){
-  s = s==null ? "" : String(s);
-  if (/[",\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
-  return s;
-}
-function toNum(v){ const n = +v; return Number.isFinite(n) ? n : 0; }
-
-function resetAll(showAlert=true){
-  state.q=""; $("#q").value="";
-  state.club=""; $("#club").value="";
-  state.nation=""; $("#nation").value="";
-  state.pos=""; $("#pos").value="";
-  state.ovrMin=1; state.ovrMax=99; $("#ovrMin").value=1; $("#ovrMax").value=99;
-  state.paceMin=1; $("#paceMin").value=1; $("#paceVal").textContent="1";
-  state.smMin=1; $("#smMin").value="1";
-  state.wfMin=1; $("#wfMin").value="1";
-  state.rowsPerPage=25; $("#rowsPerPage").value="25";
-  state.page=1; state.sortKey="overall"; state.sortDir="desc";
-  state.data=[...players];
-  applyFilters(); render();
-  if(showAlert) toast("Filters cleared");
-}
-
-function toast(msg){
-  const t=document.createElement("div");
-  t.textContent=msg; t.style.cssText = `
-    position:fixed; left:50%; bottom:24px; transform:translateX(-50%);
-    background:linear-gradient(135deg,var(--brand),var(--brand-2)); color:#06111a;
-    padding:10px 14px; border-radius:999px; font-weight:800; box-shadow:var(--shadow); z-index:9999`;
-  document.body.appendChild(t); setTimeout(()=>{ t.remove(); }, 1400);
-}
-/* ======== END ======== */
+/* ======== BOOT ======== */
+renderHome();
+initDb();
 </script>
 </body>
 </html>
