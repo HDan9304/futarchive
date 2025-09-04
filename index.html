@@ -2,111 +2,70 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>EAFC Guide — 4x Mobile · 8x Desktop</title>
+<title>EAFC Guide — Card Wall</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg0:#06131A; --bg1:#0A1D28; --line:#133443; --text:#EAF6FF; --muted:#9FBBCD;
-    --g1:#22E4C6; --g2:#25B6FF; --g3:#9BFF53;
-    --brand-grad-2: linear-gradient(135deg,var(--g2),var(--g3));
-    --shadow:0 10px 22px rgba(0,0,0,.35);
-
-    /* card defaults: MOBILE first (4 cols) */
-    --card-h: 140px;          /* comfy for 4-up phones */
-    --art-ratio: 3/4;
+    /* FC26-ish background */
+    --bg0:#06131A; --text:#EAF6FF; --muted:#9FBBCD;
   }
-
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
     margin:0; color:var(--text);
     font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial;
-    font-variation-settings:"wght" 470;
     background:
       radial-gradient(1000px 700px at 15% -10%, rgba(37,182,255,.18), transparent 50%),
       radial-gradient(900px 600px at 90% 0%, rgba(34,228,198,.16), transparent 50%),
       radial-gradient(1200px 900px at 60% 110%, rgba(155,255,83,.08), transparent 60%),
       var(--bg0);
   }
+  header{position:sticky; top:0; z-index:10; padding:10px 12px; backdrop-filter:blur(10px)}
+  .wrap{max-width:1280px; margin:0 auto; display:flex; gap:8px; align-items:center}
+  h1{margin:0; font-size:16px}
+  .search{flex:1; display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:12px; background:rgba(255,255,255,.03)}
+  .search input{width:100%; background:transparent; border:0; color:var(--text); outline:none}
 
-  header{
-    position:sticky; top:0; z-index:30;
-    background:linear-gradient(180deg, rgba(6,19,26,.92), rgba(6,19,26,.70));
-    border-bottom:1px solid var(--line); backdrop-filter:blur(10px)
-  }
-  .wrap{max-width:1280px; margin:0 auto; padding:10px 12px; display:flex; gap:8px; align-items:center}
-  h1{margin:0; font-size:16px; display:flex; align-items:center; gap:8px}
-  .logo{width:26px; height:26px; display:grid; place-items:center; border-radius:8px; background:var(--brand-grad-2); color:#031216; font-weight:900; box-shadow:var(--shadow)}
-  .search{flex:1; min-width:160px; display:flex; align-items:center; gap:8px; background:var(--bg1); padding:8px 10px; border:1px solid var(--line); border-radius:12px}
-  .search input{width:100%; background:transparent; border:0; color:var(--text); outline:none; font-size:14px}
+  main{max-width:1280px; margin:10px auto 24px; padding:0 10px}
 
-  main{max-width:1280px; margin:12px auto 20px; padding:0 10px}
+  /* Grid: 4 on mobile, 8 on desktop */
+  .grid{display:grid; gap:10px; grid-template-columns:repeat(4,1fr)}
+  @media (min-width:1200px){ .grid{grid-template-columns:repeat(8,1fr); gap:12px} }
 
-  /* GRID: 4 columns on mobile; 8 on desktop */
-  .grid{display:grid; gap:8px; grid-template-columns:repeat(4,1fr)}
-  @media (min-width:1200px){
-    .grid{gap:12px; grid-template-columns:repeat(8,1fr)}
-    :root{ --card-h: 200px; } /* scale up on desktop */
-  }
-
-  /* CARD: minimal */
+  /* Pure card artwork (no box) */
   .card{
-    height:var(--card-h);
-    border:1px solid var(--line); border-radius:14px; background:rgba(10,29,40,.94);
-    box-shadow:var(--shadow); overflow:hidden; cursor:pointer;
-    display:grid; grid-template-rows:1fr; transition:transform .1s ease, box-shadow .1s ease;
+    position:relative; cursor:pointer; -webkit-tap-highlight-color:transparent;
+    transition:transform .12s ease, filter .12s ease;
   }
-  .card:focus-visible{outline:2px solid var(--g2); outline-offset:2px}
-  .card:hover{ transform:translateY(-2px); box-shadow:0 12px 26px rgba(0,0,0,.45) }
+  .card:focus-visible{outline:2px solid rgba(255,255,255,.25); outline-offset:4px; border-radius:14px}
+  .card:hover{ transform:translateY(-2px); filter:brightness(1.02) }
 
-  .art{position:relative; padding:8px; height:100%; display:grid; align-items:center; justify-items:center}
-  .art-inner{
-    position:relative; width:100%; height:100%; border-radius:12px; overflow:hidden;
-    aspect-ratio:var(--art-ratio);
-    background:radial-gradient(160px 120px at 30% 0%, rgba(255,255,255,.10), transparent 45%), #131017;
-    border:1px solid rgba(255,255,255,.1);
-  }
-  .art-inner::before{
-    content:""; position:absolute; inset:0; border-radius:12px; pointer-events:none; opacity:.95;
-    background-image: var(--frame-url, none); background-size:cover; background-position:center; background-repeat:no-repeat;
+  /* The artwork itself */
+  .art{
+    width:100%; aspect-ratio:3/4;     /* keep all cards same shape */
+    display:block; border-radius:14px; overflow:hidden;
+    box-shadow:0 8px 20px rgba(0,0,0,.35); /* subtle depth under the art only */
+    background:#0F0D12;
+    object-fit:cover;                   /* SVG/PNG/JPG all fine */
   }
 
-  .rating{
-    position:absolute; left:12px; top:12px;
-    width:44px; height:44px; border-radius:12px; background:var(--brand-grad-2); padding:2px;
-    box-shadow:inset 0 0 0 2px rgba(255,255,255,.15)
-  }
-  .rating>b{
-    width:100%; height:100%; display:grid; place-items:center; border-radius:9px;
-    background:radial-gradient(120px 120px at 30% 10%, rgba(255,255,255,.18), transparent 40%), #0E0B11;
-    font-weight:900; font-size:18px; letter-spacing:.3px
-  }
-  @media (min-width:1200px){
-    .rating{left:14px; top:14px; width:56px; height:56px}
-    .rating>b{font-size:22px}
-  }
-
-  /* Modal (for details on click) */
-  .modal{position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.55); backdrop-filter:blur(6px); z-index:60}
+  /* Modal (optional) */
+  .modal{position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.55); backdrop-filter:blur(6px); z-index:50}
   .modal.open{display:grid}
-  .card-modal{width:min(720px,92vw); background:var(--bg1); border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow)}
-  .card-modal header{display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--line)}
-  .x{all:unset; cursor:pointer; display:inline-grid; place-items:center; padding:8px 10px; border-radius:12px; background:#0F2430; border:1px solid var(--line); color:var(--text)}
-  .modal-body{padding:16px}
-  .poschip{display:inline-block; font-size:12px; padding:4px 8px; border-radius:999px; background:#0b1f29; border:1px solid var(--line); color:#CFEAFA; font-weight:700}
-  .statbar{height:8px; background:#0c1f2a; border:1px solid var(--line); border-radius:999px; overflow:hidden}
-  .statbar>i{display:block; height:100%; background:linear-gradient(90deg,var(--g1),var(--g2)); width:0%}
+  .modal-card{width:min(720px,92vw); background:rgba(6,19,26,.94); border-radius:16px; padding:16px}
+  .modal h3{margin:0 0 8px 0}
+  .x{all:unset; float:right; cursor:pointer; padding:6px 10px; border-radius:10px; background:rgba(255,255,255,.06)}
   .muted{color:var(--muted)}
 </style>
 </head>
 <body>
 <header>
   <div class="wrap">
-    <h1><span class="logo">FC</span> EAFC Guide</h1>
-    <div class="search" role="search">
+    <h1>EAFC Guide</h1>
+    <div class="search">
       <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 18a8 8 0 1 1 5.292-14.036A8 8 0 0 1 10 18m11.707 2.293l-5.387-5.387A9.956 9.956 0 0 0 20 10a10 10 0 1 0-10 10a9.956 9.956 0 0 0 4.906-1.68l5.387 5.387z"/></svg>
       <input id="q" placeholder="Search players…" inputmode="search" />
     </div>
@@ -114,122 +73,81 @@
 </header>
 
 <main>
-  <section class="grid" id="grid"></section>
+  <section id="grid" class="grid" aria-live="polite"></section>
 </main>
 
 <!-- Modal -->
-<div class="modal" id="modal" aria-hidden="true">
-  <div class="card-modal">
-    <header>
-      <h3 style="margin:0; font-weight:800" id="modalTitle">Player</h3>
-      <button class="x" id="closeModal">✕</button>
-    </header>
-    <div class="modal-body" id="modalBody"></div>
+<div id="modal" class="modal" aria-hidden="true">
+  <div class="modal-card">
+    <button class="x" id="closeModal">✕</button>
+    <h3 id="mTitle">Player</h3>
+    <div class="muted" id="mSub"></div>
+    <div style="margin-top:12px">
+      <!-- If you want, you can render a bigger art here too -->
+      <img id="mArt" class="art" style="width:180px; box-shadow:none" alt="">
+    </div>
   </div>
 </div>
 
 <script>
-/* ---------- CONFIG: global frame file ---------- */
-const CONFIG = { frameURL: "assets/frame_default.png" }; // change to your PNG/JPG
-document.documentElement.style.setProperty("--frame-url", `url("${CONFIG.frameURL}")`);
+const $ = s=>document.querySelector(s);
+const $$ = s=>document.querySelectorAll(s);
 
-/* ---------- Demo data (swap for live feed) ---------- */
-const releases = [
-  {id:112, rating:99, name:"Ronaldinho", pos:"LW", club:"Icons", nation:"Brazil", promo:"Icon Moments", sm:5, wf:5, releasedAt:daysAgo(7),  pop:99, frame:"assets/icon_frame.png"},
-  {id:103, rating:98, name:"Luis Díaz",  pos:"LW", club:"Liverpool", nation:"Colombia", promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(2),  pop:96, frame:"assets/festival_frame.png"},
-  {id:101, rating:98, name:"Bakayoko",   pos:"RW", club:"PSV",       nation:"Belgium",  promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(0.3),pop:95, frame:"assets/festival_frame.png"},
-  {id:105, rating:98, name:"Cherki",     pos:"CAM",club:"Lyon",      nation:"France",   promo:"Festival", sm:5, wf:5, releasedAt:daysAgo(3),  pop:92, frame:"assets/festival_frame.png"},
-  {id:104, rating:98, name:"J. Kluivert",pos:"ST", club:"Bournemouth",nation:"Netherlands",promo:"Festival",sm:5,wf:5,releasedAt:daysAgo(2),pop:89, frame:"assets/festival_frame.png"},
-  {id:102, rating:98, name:"Noa Lang",   pos:"LW", club:"PSV",       nation:"Netherlands",promo:"Festival",sm:5,wf:5,releasedAt:daysAgo(1), pop:91, frame:"assets/festival_frame.png"},
-  // add more to see 8-up desktop fill
-];
+/* Load players.json (same-origin, eg. GitHub Pages) */
+let ALL = [];
+async function boot(){
+  const res = await fetch("data/players.json", {cache:"no-cache"});
+  const json = await res.json();
+  ALL = json.players || [];
+  render();
+}
 
-const players = releases.map(r => ({
-  id:r.id, name:r.name, position:r.pos, club:r.club, nation:r.nation,
-  overall:r.rating, pace:90, shooting:88, passing:87, dribbling:93, defending:50, physical:80,
-  skillMoves:r.sm, weakFoot:r.wf, workRate:"High/Medium", foot:"Right"
-}));
+/* Search */
+$("#q").addEventListener("input", ()=>render());
 
-/* ---------- State + helpers ---------- */
-let state = { q:"" };
-const $ = s => document.querySelector(s);
-const $$ = s => document.querySelectorAll(s);
-function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function daysAgo(d){ const t=new Date(); t.setTime(t.getTime()-d*24*3600*1000); return t.toISOString(); }
-function timeAgo(iso){ const sec=(Date.now()-new Date(iso).getTime())/1000; const d=Math.floor(sec/86400), h=Math.floor((sec%86400)/3600); if(d>=1) return d+" days ago"; if(h>=1) return h+" hours ago"; return "Just now"; }
-function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
-
-/* ---------- Grid render ---------- */
 function render(){
-  const q = state.q;
-  const items = releases.filter(r=>{
+  const q = $("#q").value.trim().toLowerCase();
+  const list = ALL.filter(p=>{
     if(!q) return true;
-    const hay=(r.name+" "+r.club+" "+r.nation+" "+r.promo).toLowerCase();
+    const hay = (p.name+" "+(p.club||"")+" "+(p.nation||"")).toLowerCase();
     return hay.includes(q);
   });
 
-  $("#grid").innerHTML = items.map(r=>{
-    const frameStyle = r.frame ? `--frame-url:url('${r.frame}')` : "";
-    return `
-      <article class="card" tabindex="0" role="button" aria-label="${esc(r.name)}" data-id="${r.id}">
-        <div class="art">
-          <div class="art-inner" style="${frameStyle}">
-            <div class="rating"><b>${r.rating}</b></div>
-          </div>
-        </div>
-      </article>`;
-  }).join("");
+  const html = list.map(p=>`
+    <figure class="card" tabindex="0" role="button" aria-label="${esc(p.name)}" data-id="${p.id}">
+      <img class="art" src="${esc(p.image)}" alt="${esc(p.name)} card" loading="lazy" />
+    </figure>
+  `).join("");
+
+  $("#grid").innerHTML = html;
 
   $$("#grid .card").forEach(el=>{
-    el.addEventListener("click", openFromCard);
-    el.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" ") openFromCard.call(el,e); });
+    el.addEventListener("click", openModal);
+    el.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" ") openModal.call(el,e); });
   });
 }
 
-/* ---------- Open modal with details ---------- */
-function openFromCard(){
-  const id=+this.dataset.id;
-  const r=releases.find(x=>x.id===id);
-  const p=players.find(x=>x.id===id);
-  $("#modalTitle").textContent = r.name;
-  $("#modalBody").innerHTML = `
-    <div style="display:grid; grid-template-columns:140px 1fr; gap:14px; align-items:start">
-      <div>
-        <div class="art-inner" style="--frame-url:url('${esc(r.frame||CONFIG.frameURL)}'); width:140px; aspect-ratio:var(--art-ratio)"></div>
-      </div>
-      <div>
-        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
-          <span class="poschip">${esc(r.pos)}</span>
-          <span class="muted">${esc(r.club)} • ${esc(r.nation)}</span>
-          <span class="muted" style="margin-left:auto">${esc(timeAgo(r.releasedAt))}</span>
-        </div>
-        <div style="margin:12px 0; display:grid; grid-template-columns:1fr 1fr; gap:10px">
-          ${detail("Overall", p.overall)}
-          ${detail("Pace", p.pace)}
-          ${detail("Shooting", p.shooting)}
-          ${detail("Passing", p.passing)}
-          ${detail("Dribbling", p.dribbling)}
-          ${detail("Defending", p.defending)}
-          ${detail("Physical", p.physical)}
-        </div>
-        <div class="muted">Promo: ${esc(r.promo)} • SM ${p.skillMoves}★ • WF ${p.weakFoot}★</div>
-      </div>
-    </div>`;
-  $("#modal").classList.add("open"); $("#modal").setAttribute("aria-hidden","false");
+/* Minimal modal */
+function openModal(){
+  const id = this.dataset.id;
+  const p = ALL.find(x=>String(x.id)===String(id));
+  if(!p) return;
+  $("#mTitle").textContent = p.name;
+  $("#mSub").textContent   = [p.position, p.club, p.nation].filter(Boolean).join(" • ");
+  $("#mArt").src = p.image;
+  $("#mArt").alt = p.name+" card";
+  $("#modal").classList.add("open");
+  $("#modal").setAttribute("aria-hidden","false");
 }
-function detail(label,val){ val=clamp(+val||0,1,99); return `<div><div class="muted" style="font-size:12px">${label}</div><div style="display:flex; gap:8px; align-items:center"><b>${val}</b><div class="statbar" style="flex:1"><i style="width:${val}%"></i></div></div></div>`; }
 
-/* ---------- Search ---------- */
-$("#q").addEventListener("input", e=>{ state.q = e.target.value.trim().toLowerCase(); render(); });
-
-/* ---------- Modal close ---------- */
 $("#closeModal").addEventListener("click", closeModal);
 $("#modal").addEventListener("click", e=>{ if(e.target.id==="modal") closeModal(); });
 window.addEventListener("keydown", e=>{ if(e.key==="Escape") closeModal(); });
 function closeModal(){ $("#modal").classList.remove("open"); $("#modal").setAttribute("aria-hidden","true"); }
 
-/* ---------- Boot ---------- */
-render();
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
+boot();
 </script>
 </body>
 </html>
