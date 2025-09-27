@@ -1,153 +1,454 @@
 <!doctype html>
+
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<title>EAFC Guide — Card Wall</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-<style>
-  :root{
-    /* FC26-ish background */
-    --bg0:#06131A; --text:#EAF6FF; --muted:#9FBBCD;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0; color:var(--text);
-    font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial;
-    background:
-      radial-gradient(1000px 700px at 15% -10%, rgba(37,182,255,.18), transparent 50%),
-      radial-gradient(900px 600px at 90% 0%, rgba(34,228,198,.16), transparent 50%),
-      radial-gradient(1200px 900px at 60% 110%, rgba(155,255,83,.08), transparent 60%),
-      var(--bg0);
-  }
-  header{position:sticky; top:0; z-index:10; padding:10px 12px; backdrop-filter:blur(10px)}
-  .wrap{max-width:1280px; margin:0 auto; display:flex; gap:8px; align-items:center}
-  h1{margin:0; font-size:16px}
-  .search{flex:1; display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:12px; background:rgba(255,255,255,.03)}
-  .search input{width:100%; background:transparent; border:0; color:var(--text); outline:none}
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FPL Assistant – Single‑File HTML</title>
+  <meta name="description" content="A lightweight, single‑file FPL assistant: captain picks, fixtures, watchlist, and optional team loader via Entry ID." />
+  <style>
+    :root{
+      --bg: #0b1220;
+      --card: #131a2b;
+      --muted: #94a3b8;
+      --text: #e6edf6;
+      --accent: #7c3aed; /* purple */
+      --accent-2: #22c55e; /* green */
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --chip: #0ea5e9; /* sky */
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}
+    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+    header{
+      display:flex;align-items:center;gap:14px;justify-content:space-between;margin-bottom:18px
+    }
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand .logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#6d28d9);display:grid;place-items:center;box-shadow:var(--shadow)}
+    .brand .logo b{font-size:20px}
+    .brand h1{font-size:20px;margin:0}
+    .muted{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+@media (max-width:980px){.grid{grid-template-columns:repeat(6,1fr)}}
+@media (max-width:640px){.grid{grid-template-columns:repeat(2,1fr)}}
 
-  main{max-width:1280px; margin:10px auto 24px; padding:0 10px}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+.card h2{margin:0 0 10px 0;font-size:18px}
+.card h3{margin:10px 0 6px 0;font-size:16px}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#0f172a;border:1px solid #1f2937;color:#cbd5e1;font-size:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.grow{flex:1 1 auto}
+.btn{appearance:none;border:0;background:var(--accent);color:#fff;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:600;box-shadow:var(--shadow)}
+.btn.secondary{background:#1f2937}
+.btn.ghost{background:transparent;border:1px solid #334155}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+input,select{width:100%;background:#0f172a;border:1px solid #283142;color:var(--text);border-radius:12px;padding:10px 12px}
+.small{font-size:12px}
+.warn{color:var(--warn)}
+.danger{color:var(--danger)}
+.ok{color:var(--accent-2)}
 
-  /* Grid: 4 on mobile, 8 on desktop */
-  .grid{display:grid; gap:10px; grid-template-columns:repeat(4,1fr)}
-  @media (min-width:1200px){ .grid{grid-template-columns:repeat(8,1fr); gap:12px} }
+.list{display:grid;gap:10px}
+.player{display:grid;grid-template-columns: 1fr auto auto auto;gap:8px;align-items:center;background:#0e1627;border:1px solid #1f2937;border-radius:12px;padding:10px}
+.player .name{font-weight:600}
+.badge{padding:3px 8px;border-radius:999px;font-size:11px;border:1px solid #334155;background:#111827}
+.tag{font-size:11px;color:#cbd5e1}
 
-  /* Pure card artwork (no box) */
-  .card{
-    position:relative; cursor:pointer; -webkit-tap-highlight-color:transparent;
-    transition:transform .12s ease, filter .12s ease;
-  }
-  .card:focus-visible{outline:2px solid rgba(255,255,255,.25); outline-offset:4px; border-radius:14px}
-  .card:hover{ transform:translateY(-2px); filter:brightness(1.02) }
+.kv{display:flex;gap:8px;flex-wrap:wrap}
+.kv div{background:#0f172a;border:1px solid #253045;border-radius:10px;padding:6px 8px;font-size:12px}
 
-  /* The artwork itself */
-  .art{
-    width:100%; aspect-ratio:3/4;     /* keep all cards same shape */
-    display:block; border-radius:14px; overflow:hidden;
-    box-shadow:0 8px 20px rgba(0,0,0,.35); /* subtle depth under the art only */
-    background:#0F0D12;
-    object-fit:cover;                   /* SVG/PNG/JPG all fine */
-  }
+footer{margin:36px 0;color:var(--muted);font-size:13px}
+a{color:#93c5fd}
+code{background:#0b1220;border:1px solid #1e293b;border-radius:8px;padding:2px 6px}
 
-  /* Modal (optional) */
-  .modal{position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.55); backdrop-filter:blur(6px); z-index:50}
-  .modal.open{display:grid}
-  .modal-card{width:min(720px,92vw); background:rgba(6,19,26,.94); border-radius:16px; padding:16px}
-  .modal h3{margin:0 0 8px 0}
-  .x{all:unset; float:right; cursor:pointer; padding:6px 10px; border-radius:10px; background:rgba(255,255,255,.06)}
-  .muted{color:var(--muted)}
-</style>
+  </style>
 </head>
 <body>
-<header>
   <div class="wrap">
-    <h1>EAFC Guide</h1>
-    <div class="search">
-      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 18a8 8 0 1 1 5.292-14.036A8 8 0 0 1 10 18m11.707 2.293l-5.387-5.387A9.956 9.956 0 0 0 20 10a10 10 0 1 0-10 10a9.956 9.956 0 0 0 4.906-1.68l5.387 5.387z"/></svg>
-      <input id="q" placeholder="Search players…" inputmode="search" />
+    <header>
+      <div class="brand">
+        <div class="logo"><b>⚽️</b></div>
+        <div>
+          <h1>FPL Assistant</h1>
+          <div class="muted small">Single‑file HTML • Live data • Captain picks • Fixtures • Watchlist</div>
+        </div>
+      </div>
+      <div class="row">
+        <button id="refresh" class="btn ghost">Refresh data</button>
+        <a class="btn secondary" href="https://fantasy.premierleague.com/" target="_blank" rel="noreferrer">Open FPL</a>
+      </div>
+    </header><section class="grid">
+  <!-- Left column: team loader & search -->
+  <div class="card" style="grid-column: span 12;">
+    <div class="row">
+      <div class="grow">
+        <label class="small muted">Optional • Your FPL Entry ID</label>
+        <input id="entryId" placeholder="e.g. 1234567" inputmode="numeric" />
+      </div>
+      <div>
+        <label class="small muted"> </label>
+        <button id="loadTeam" class="btn">Load My Team</button>
+      </div>
+      <div class="grow"></div>
     </div>
-  </div>
-</header>
-
-<main>
-  <section id="grid" class="grid" aria-live="polite"></section>
-</main>
-
-<!-- Modal -->
-<div id="modal" class="modal" aria-hidden="true">
-  <div class="modal-card">
-    <button class="x" id="closeModal">✕</button>
-    <h3 id="mTitle">Player</h3>
-    <div class="muted" id="mSub"></div>
-    <div style="margin-top:12px">
-      <!-- If you want, you can render a bigger art here too -->
-      <img id="mArt" class="art" style="width:180px; box-shadow:none" alt="">
+    <div class="row" style="margin-top:8px">
+      <div class="grow">
+        <label class="small muted">Search players</label>
+        <input id="search" placeholder="Name or team (e.g., Haaland, City)" />
+      </div>
+      <div style="width:180px">
+        <label class="small muted">Position</label>
+        <select id="posFilter">
+          <option value="">All</option>
+          <option value="1">GK</option>
+          <option value="2">DEF</option>
+          <option value="3">MID</option>
+          <option value="4">FWD</option>
+        </select>
+      </div>
+      <div style="width:180px">
+        <label class="small muted">Sort by</label>
+        <select id="sort">
+          <option value="score">Captain score</option>
+          <option value="form">Form</option>
+          <option value="ppg">Points / game</option>
+          <option value="value">Value (PPG per £)</option>
+        </select>
+      </div>
     </div>
+    <div id="status" class="small muted" style="margin-top:8px">Loading…</div>
   </div>
-</div>
 
-<script>
-const $ = s=>document.querySelector(s);
-const $$ = s=>document.querySelectorAll(s);
+  <!-- Captain picks -->
+  <div class="card" style="grid-column: span 6;">
+    <h2>Captain picks (next GW)</h2>
+    <div id="captainList" class="list"></div>
+  </div>
 
-/* Load players.json (same-origin, eg. GitHub Pages) */
-let ALL = [];
-async function boot(){
-  const res = await fetch("data/players.json", {cache:"no-cache"});
-  const json = await res.json();
-  ALL = json.players || [];
-  render();
-}
+  <!-- My team / picks -->
+  <div class="card" style="grid-column: span 6;">
+    <h2>My team (if loaded)</h2>
+    <div id="myTeam" class="list small muted">Enter your Entry ID and click “Load My Team”.</div>
+  </div>
 
-/* Search */
-$("#q").addEventListener("input", ()=>render());
+  <!-- Watchlist -->
+  <div class="card" style="grid-column: span 6;">
+    <h2>Watchlist</h2>
+    <div id="watchlist" class="list small muted">Use the search to add players you’re tracking.</div>
+  </div>
 
-function render(){
-  const q = $("#q").value.trim().toLowerCase();
-  const list = ALL.filter(p=>{
-    if(!q) return true;
-    const hay = (p.name+" "+(p.club||"")+" "+(p.nation||"")).toLowerCase();
-    return hay.includes(q);
-  });
+  <!-- Players search results -->
+  <div class="card" style="grid-column: span 6;">
+    <h2>Players</h2>
+    <div id="players" class="list"></div>
+  </div>
 
-  const html = list.map(p=>`
-    <figure class="card" tabindex="0" role="button" aria-label="${esc(p.name)}" data-id="${p.id}">
-      <img class="art" src="${esc(p.image)}" alt="${esc(p.name)} card" loading="lazy" />
-    </figure>
-  `).join("");
+  <!-- Fixtures insight -->
+  <div class="card" style="grid-column: span 12;">
+    <h2>Upcoming fixtures (next gameweek)</h2>
+    <div id="fixtures" class="list"></div>
+  </div>
+</section>
 
-  $("#grid").innerHTML = html;
+<footer>
+  Built for you with ❤️. Data from the official Fantasy Premier League endpoints. If an FPL endpoint blocks access (privacy/CORS), the app will fall back gracefully.
+</footer>
 
-  $$("#grid .card").forEach(el=>{
-    el.addEventListener("click", openModal);
-    el.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" ") openModal.call(el,e); });
-  });
-}
+  </div>  <script>
+  ;(() => {
+    const el = (id) => document.getElementById(id)
+    const eStatus = el('status')
+    const ePlayers = el('players')
+    const eCaptainList = el('captainList')
+    const eFixtures = el('fixtures')
+    const eWatch = el('watchlist')
+    const eMyTeam = el('myTeam')
+    const eSearch = el('search')
+    const eSort = el('sort')
+    const ePos = el('posFilter')
 
-/* Minimal modal */
-function openModal(){
-  const id = this.dataset.id;
-  const p = ALL.find(x=>String(x.id)===String(id));
-  if(!p) return;
-  $("#mTitle").textContent = p.name;
-  $("#mSub").textContent   = [p.position, p.club, p.nation].filter(Boolean).join(" • ");
-  $("#mArt").src = p.image;
-  $("#mArt").alt = p.name+" card";
-  $("#modal").classList.add("open");
-  $("#modal").setAttribute("aria-hidden","false");
-}
+    const API = {
+      bootstrap: 'https://fantasy.premierleague.com/api/bootstrap-static/',
+      fixtures: 'https://fantasy.premierleague.com/api/fixtures/?future=1',
+      entry: (id) => `https://fantasy.premierleague.com/api/entry/${id}/`,
+      picks: (id, gw) => `https://fantasy.premierleague.com/api/entry/${id}/event/${gw}/picks/`,
+      elementSummary: (id) => `https://fantasy.premierleague.com/api/element-summary/${id}/`,
+    }
 
-$("#closeModal").addEventListener("click", closeModal);
-$("#modal").addEventListener("click", e=>{ if(e.target.id==="modal") closeModal(); });
-window.addEventListener("keydown", e=>{ if(e.key==="Escape") closeModal(); });
-function closeModal(){ $("#modal").classList.remove("open"); $("#modal").setAttribute("aria-hidden","true"); }
+    // Simple cache to limit network requests within session
+    const cache = new Map()
+    async function getJSON(url) {
+      if (cache.has(url)) return cache.get(url)
+      const res = await fetch(url, { headers: { 'accept': 'application/json' } })
+      if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`)
+      const data = await res.json()
+      cache.set(url, data)
+      return data
+    }
 
-function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+    const state = {
+      events: [],
+      elements: [],
+      teams: [],
+      teamById: new Map(),
+      fixtures: [],
+      currentGw: null,
+      nextGw: null,
+      watch: new Set(JSON.parse(localStorage.getItem('fpl_watchlist') || '[]')),
+    }
 
-boot();
-</script>
-</body>
+    function saveWatch() {
+      localStorage.setItem('fpl_watchlist', JSON.stringify([...state.watch]))
+    }
+
+    function posShort(type) {
+      return ({1:'GK',2:'DEF',3:'MID',4:'FWD'})[type] || '?'
+    }
+
+    function price(p) { return `£${(p/10).toFixed(1)}m` }
+
+    function teamName(id) { return state.teamById.get(id)?.name || '?' }
+
+    function nextFixtureForTeam(teamId, gwId) {
+      const fx = state.fixtures.filter(f => f.event === gwId && (f.team_h === teamId || f.team_a === teamId))
+      if (!fx.length) return null
+      // If double GW, choose the easier one for captain consideration (lower difficulty for the player's team)
+      const scored = fx.map(f => {
+        const isHome = f.team_h === teamId
+        const oppId = isHome ? f.team_a : f.team_h
+        const diff = isHome ? f.team_h_difficulty : f.team_a_difficulty
+        return { oppId, isHome, diff, f }
+      })
+      scored.sort((a,b) => a.diff - b.diff)
+      return scored[0]
+    }
+
+    function captainScoreFor(player, gwId) {
+      const form = parseFloat(player.form || '0') || 0
+      const ppg = parseFloat(player.points_per_game || '0') || 0
+      const posW = ({1:0.0,2:0.45,3:1.0,4:0.9})[player.element_type] || 0.6
+      const fx = nextFixtureForTeam(player.team, gwId)
+      const oppWeight = fx ? (6 - Math.max(1, Math.min(5, fx.diff))) / 5 : 0.6 // 1 (hard) → 0.2, 5 (easy) → 1.0
+      const base = 0.6 * form + 0.4 * ppg
+      return base * (0.7 + 0.3 * oppWeight) * posW
+    }
+
+    function valueScore(player) {
+      const ppg = parseFloat(player.points_per_game || '0') || 0
+      const cost = player.now_cost || 1
+      return ppg / cost
+    }
+
+    function injuryTag(player) {
+      // status: 'a' available, 'd' doubtful, 'i' injured, 's' suspended, 'n' not available
+      const s = player.status
+      if (s === 'a') return ''
+      if (s === 'd') return '<span class="badge" title="Doubtful">Doubt</span>'
+      if (s === 'i') return '<span class="badge" title="Injured">Inj</span>'
+      if (s === 's') return '<span class="badge" title="Suspended">Susp</span>'
+      if (s === 'n') return '<span class="badge" title="Unavailable">NA</span>'
+      return ''
+    }
+
+    function renderPlayerRow(player, gwId, withAddBtn = true) {
+      const team = teamName(player.team)
+      const fx = nextFixtureForTeam(player.team, gwId)
+      const opp = fx ? state.teamById.get(fx.oppId)?.short_name : '—'
+      const diff = fx ? fx.diff : '—'
+      const score = captainScoreFor(player, gwId)
+      const tag = injuryTag(player)
+      const id = player.id
+      const isWatched = state.watch.has(id)
+      return `
+        <div class="player" data-id="${id}">
+          <div>
+            <div class="name">${player.web_name} ${tag}</div>
+            <div class="tag">${posShort(player.element_type)} • ${team}</div>
+          </div>
+          <div class="kv">
+            <div title="Captain score">C: ${score.toFixed(2)}</div>
+            <div title="Form">Form: ${parseFloat(player.form||0).toFixed(2)}</div>
+            <div title="Points per game">PPG: ${parseFloat(player.points_per_game||0).toFixed(2)}</div>
+            <div title="Fixture difficulty">FDR: ${diff}</div>
+            <div title="Price">${price(player.now_cost)}</div>
+          </div>
+          <div>${opp ? `<span class="pill" title="Opponent">vs ${opp}${fx && fx.isHome ? ' (H)' : ' (A)'} </span>` : ''}</div>
+          <div>
+            ${withAddBtn ? `<button class="btn ghost" data-act="${isWatched ? 'rm' : 'add'}">${isWatched ? 'Remove' : 'Watch'}</button>` : ''}
+          </div>
+        </div>`
+    }
+
+    function renderCaptainList(players, gwId) {
+      eCaptainList.innerHTML = players.slice(0, 12).map(p => renderPlayerRow(p, gwId, true)).join('')
+    }
+
+    function bindRowButtons(container, onChange) {
+      container.addEventListener('click', (ev) => {
+        const btn = ev.target.closest('button')
+        if (!btn) return
+        const row = ev.target.closest('.player')
+        const id = Number(row?.dataset?.id)
+        if (!id) return
+        const act = btn.dataset.act
+        if (act === 'add') { state.watch.add(id); saveWatch(); onChange?.() }
+        if (act === 'rm')  { state.watch.delete(id); saveWatch(); onChange?.() }
+      })
+    }
+
+    function renderWatchlist(gwId) {
+      if (!state.watch.size) {
+        eWatch.classList.add('muted')
+        eWatch.innerHTML = 'Use the search to add players you’re tracking.'
+        return
+      }
+      eWatch.classList.remove('muted')
+      const byId = new Map(state.elements.map(p => [p.id, p]))
+      const list = [...state.watch]
+        .map(id => byId.get(id))
+        .filter(Boolean)
+        .sort((a,b) => captainScoreFor(b, gwId) - captainScoreFor(a, gwId))
+      eWatch.innerHTML = list.map(p => renderPlayerRow(p, gwId, true)).join('')
+    }
+
+    function renderPlayersList(list, gwId) {
+      ePlayers.innerHTML = list.slice(0, 100).map(p => renderPlayerRow(p, gwId, true)).join('')
+    }
+
+    function filterPlayers() {
+      const q = (eSearch.value || '').trim().toLowerCase()
+      const pos = ePos.value
+      const arr = state.elements.filter(p => {
+        if (pos && String(p.element_type) !== pos) return false
+        if (!q) return true
+        const t = state.teamById.get(p.team)
+        const hay = `${p.first_name} ${p.second_name} ${p.web_name} ${t?.name} ${t?.short_name}`.toLowerCase()
+        return hay.includes(q)
+      })
+      const gwId = state.nextGw?.id || state.currentGw?.id || state.events?.[0]?.id
+      const sort = eSort.value
+      arr.sort((a,b) => {
+        if (sort === 'form') return (parseFloat(b.form||0) - parseFloat(a.form||0))
+        if (sort === 'ppg') return (parseFloat(b.points_per_game||0) - parseFloat(a.points_per_game||0))
+        if (sort === 'value') return (valueScore(b) - valueScore(a))
+        return (captainScoreFor(b, gwId) - captainScoreFor(a, gwId))
+      })
+      renderPlayersList(arr, gwId)
+    }
+
+    function renderFixturesNextGw() {
+      const gw = state.nextGw || state.currentGw
+      if (!gw) { eFixtures.innerHTML = '<span class="muted">No gameweek data.</span>'; return }
+      const fx = state.fixtures.filter(f => f.event === gw.id)
+      if (!fx.length) { eFixtures.innerHTML = '<span class="muted">No fixtures found for next GW.</span>'; return }
+      fx.sort((a,b) => (a.kickoff_time || '').localeCompare(b.kickoff_time || ''))
+      eFixtures.innerHTML = fx.map(f => {
+        const h = state.teamById.get(f.team_h)
+        const a = state.teamById.get(f.team_a)
+        const dd = `${h?.short_name} (H${f.team_h_difficulty}) vs ${a?.short_name} (A${f.team_a_difficulty})`
+        const when = f.kickoff_time ? new Date(f.kickoff_time).toLocaleString() : 'TBD'
+        return `<div class="player"><div><div class="name">${h?.name} vs ${a?.name}</div><div class="tag">${when}</div></div><div class="kv"><div>H FDR: ${f.team_h_difficulty}</div><div>A FDR: ${f.team_a_difficulty}</div></div><div></div><div></div></div>`
+      }).join('')
+    }
+
+    async function loadBootstrap() {
+      const data = await getJSON(API.bootstrap)
+      state.events = data.events || []
+      state.elements = (data.elements || []).filter(p => p?.now_cost)
+      state.teams = data.teams || []
+      state.teamById = new Map(state.teams.map(t => [t.id, t]))
+      state.currentGw = state.events.find(e => e.is_current) || null
+      state.nextGw = state.events.find(e => e.is_next) || null
+    }
+
+    async function loadFixtures() {
+      const data = await getJSON(API.fixtures)
+      state.fixtures = data || []
+    }
+
+    function pickTopCaptains() {
+      const gwId = state.nextGw?.id || state.currentGw?.id || state.events?.[0]?.id
+      const candidates = state.elements.filter(p => p.element_type >= 2) // ignore GK
+      const ranked = candidates
+        .map(p => ({ p, s: captainScoreFor(p, gwId) }))
+        .sort((a,b) => b.s - a.s)
+        .slice(0, 30)
+        .map(x => x.p)
+      renderCaptainList(ranked, gwId)
+    }
+
+    function bindSearchEvents() {
+      ;[eSearch, eSort, ePos].forEach(ctrl => ctrl.addEventListener('input', filterPlayers))
+      bindRowButtons(ePlayers, () => { filterPlayers(); renderWatchlist(state.nextGw?.id || state.currentGw?.id) })
+      bindRowButtons(eWatch, () => { renderWatchlist(state.nextGw?.id || state.currentGw?.id) })
+      bindRowButtons(eCaptainList, () => { renderWatchlist(state.nextGw?.id || state.currentGw?.id) })
+    }
+
+    async function loadMyTeam(entryId) {
+      const gwId = state.currentGw?.id || state.events.find(e => e.is_next)?.id || state.events?.[0]?.id
+      eMyTeam.innerHTML = '<span class="muted">Loading your team…</span>'
+      try {
+        // Fetch entry (basic info, for validation/owner)
+        await getJSON(API.entry(entryId))
+      } catch (e) {
+        eMyTeam.innerHTML = `<span class="danger">Could not find Entry ID <b>${entryId}</b>. Check the number and try again.</span>`
+        return
+      }
+      try {
+        const picks = await getJSON(API.picks(entryId, gwId))
+        const byId = new Map(state.elements.map(p => [p.id, p]))
+        const rows = []
+        const caption = []
+        for (const pk of (picks.picks || [])) {
+          const pl = byId.get(pk.element)
+          if (!pl) continue
+          rows.push(renderPlayerRow(pl, state.nextGw?.id || gwId, false))
+          if (pk.is_captain) caption.push(`<span class="pill">Your current captain: <b>${pl.web_name}</b></span>`)
+          if (pk.is_vice_captain) caption.push(`<span class="pill">Vice‑captain: <b>${pl.web_name}</b></span>`)
+        }
+        // Suggest the best captain from loaded squad (by our score)
+        const picksPlayers = (picks.picks || []).map(pk => byId.get(pk.element)).filter(Boolean)
+        const best = picksPlayers.slice().sort((a,b) => captainScoreFor(b, state.nextGw?.id || gwId) - captainScoreFor(a, state.nextGw?.id || gwId))[0]
+        const suggestion = best ? `<div class="row" style="margin:8px 0"><span class="pill" style="background:#13213a;border-color:#2a3d5e">Suggested captain: <b>${best.web_name}</b></span></div>` : ''
+        eMyTeam.classList.remove('muted')
+        eMyTeam.innerHTML = `${caption.join(' ')} ${suggestion}` + (rows.join('') || '<span class="muted">No picks found.</span>')
+      } catch (e) {
+        eMyTeam.innerHTML = `<span class="warn">I couldn’t load your picks for GW ${gwId}. This can happen if FPL restricts access or due to CORS. You can still use captain picks, fixtures and the watchlist.</span>`
+      }
+    }
+
+    async function init() {
+      try {
+        eStatus.textContent = 'Fetching FPL data…'
+        await Promise.all([loadBootstrap(), loadFixtures()])
+        pickTopCaptains()
+        filterPlayers()
+        renderWatchlist(state.nextGw?.id || state.currentGw?.id)
+        renderFixturesNextGw()
+        const next = state.nextGw || state.currentGw
+        if (next) {
+          const deadline = new Date(next.deadline_time)
+          eStatus.innerHTML = `Next GW: <b>${next.name}</b> • Deadline: ${deadline.toLocaleString()} • Data refreshed.`
+        } else {
+          eStatus.textContent = 'Data refreshed.'
+        }
+      } catch (e) {
+        console.error(e)
+        eStatus.innerHTML = `<span class="danger">Failed to fetch FPL data. Please try again.</span>`
+      }
+    }
+
+    // Bind UI
+    el('refresh').addEventListener('click', init)
+    el('loadTeam').addEventListener('click', () => {
+      const id = (el('entryId').value||'').trim()
+      if (!id) { eMyTeam.innerHTML = '<span class="warn">Enter an Entry ID first.</span>'; return }
+      loadMyTeam(id)
+    })
+
+    bindSearchEvents()
+    init()
+  })()
+  </script></body>
 </html>
