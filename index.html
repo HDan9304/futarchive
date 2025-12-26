@@ -1,454 +1,3578 @@
-<!doctype html>
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FPL Assistant – Single‑File HTML</title>
-  <meta name="description" content="A lightweight, single‑file FPL assistant: captain picks, fixtures, watchlist, and optional team loader via Entry ID." />
-  <style>
-    :root{
-      --bg: #0b1220;
-      --card: #131a2b;
-      --muted: #94a3b8;
-      --text: #e6edf6;
-      --accent: #7c3aed; /* purple */
-      --accent-2: #22c55e; /* green */
-      --danger: #ef4444;
-      --warn: #f59e0b;
-      --chip: #0ea5e9; /* sky */
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-      --radius: 18px;
-    }
-    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}
-    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
-    header{
-      display:flex;align-items:center;gap:14px;justify-content:space-between;margin-bottom:18px
-    }
-    .brand{display:flex;align-items:center;gap:12px}
-    .brand .logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#6d28d9);display:grid;place-items:center;box-shadow:var(--shadow)}
-    .brand .logo b{font-size:20px}
-    .brand h1{font-size:20px;margin:0}
-    .muted{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
-@media (max-width:980px){.grid{grid-template-columns:repeat(6,1fr)}}
-@media (max-width:640px){.grid{grid-template-columns:repeat(2,1fr)}}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FPL Hub Pro</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
-.card h2{margin:0 0 10px 0;font-size:18px}
-.card h3{margin:10px 0 6px 0;font-size:16px}
-.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#0f172a;border:1px solid #1f2937;color:#cbd5e1;font-size:12px}
-.row{display:flex;gap:10px;flex-wrap:wrap}
-.grow{flex:1 1 auto}
-.btn{appearance:none;border:0;background:var(--accent);color:#fff;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:600;box-shadow:var(--shadow)}
-.btn.secondary{background:#1f2937}
-.btn.ghost{background:transparent;border:1px solid #334155}
-.btn:disabled{opacity:.6;cursor:not-allowed}
-input,select{width:100%;background:#0f172a;border:1px solid #283142;color:var(--text);border-radius:12px;padding:10px 12px}
-.small{font-size:12px}
-.warn{color:var(--warn)}
-.danger{color:var(--danger)}
-.ok{color:var(--accent-2)}
+    <style>
+        /* =========================================
+           1. VARIABLES & RESET
+           ========================================= */
+        :root {
+            /* Theme Colors */
+            --primary: #37003c;
+            --accent: #00ff85;
+            --bg-body: #f0f2f5;
+            --bg-app: #ffffff;
+            --text-main: #111827;
+            --text-sub: #6b7280;
+            --border: #e5e7eb;
+            --red: #e90052;
+            
+            /* Pitch Colors */
+            --grass-1: #059669;
+            --grass-2: #047857;
+            
+            /* FDR Colors (Fixture Difficulty) */
+            --fdr-1: #375523;
+            --fdr-2: #01fc7a;
+            --fdr-3: #e7e7e7; 
+            --fdr-4: #ff1751;
+            --fdr-5: #80072d;
+            --fdr-text-dark: #00381b;
+            --fdr-text-light: white;
 
-.list{display:grid;gap:10px}
-.player{display:grid;grid-template-columns: 1fr auto auto auto;gap:8px;align-items:center;background:#0e1627;border:1px solid #1f2937;border-radius:12px;padding:10px}
-.player .name{font-weight:600}
-.badge{padding:3px 8px;border-radius:999px;font-size:11px;border:1px solid #334155;background:#111827}
-.tag{font-size:11px;color:#cbd5e1}
+            /* Status Colors */
+            --status-warn: #fbbf24;
+            --status-bad: #ef4444;
+        }
 
-.kv{display:flex;gap:8px;flex-wrap:wrap}
-.kv div{background:#0f172a;border:1px solid #253045;border-radius:10px;padding:6px 8px;font-size:12px}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-footer{margin:36px 0;color:var(--muted);font-size:13px}
-a{color:#93c5fd}
-code{background:#0b1220;border:1px solid #1e293b;border-radius:8px;padding:2px 6px}
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
 
-  </style>
+        /* =========================================
+           2. APP SHELL & LAYOUT
+           ========================================= */
+        .app-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--bg-app);
+            min-height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 600px) {
+            body {
+                padding: 40px 0;
+            }
+            .app-container {
+                min-height: auto;
+                border-radius: 24px;
+                box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
+                height: 90vh;
+                overflow: hidden;
+            }
+        }
+
+        /* --- Header --- */
+        header {
+            background: rgba(255, 255, 255, 0.8); /* Glass Background */
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            height: 60px;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.05); /* Softer Border */
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02); /* Subtle Depth */
+            flex-shrink: 0;
+            z-index: 50;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .menu-btn {
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            margin-left: -8px;
+        }
+
+        .brand {
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .brand i { color: var(--accent); }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #f3f4f6;
+            border: 1px solid var(--border);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .user-avatar.active {
+            background: var(--primary);
+            color: var(--accent);
+            border-color: var(--primary);
+        }
+
+        .trophy-btn {
+            font-size: 1.2rem;
+            color: #fbbf24;
+            cursor: pointer;
+            padding: 5px;
+            transition: 0.2s;
+        }
+        .trophy-btn:active { transform: scale(0.9); }
+
+        /* --- Content Area --- */
+        .content {
+            padding: 15px;
+            overflow-y: auto;
+            flex: 1;
+            -webkit-overflow-scrolling: touch;
+        }
+        .hidden { display: none !important; }
+
+        /* =========================================
+           3. SIDEBAR & NAVIGATION
+           ========================================= */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 280px;
+            background: var(--bg-app);
+            z-index: 200;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 25px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar.open { transform: translateX(0); }
+
+        .menu-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding-left: 24px;
+            font-weight: 800;
+            color: var(--primary);
+            font-size: 1.2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .menu-items { flex: 1; padding-top: 10px; }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 24px;
+            color: var(--text-sub);
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            border-left: 4px solid transparent;
+        }
+        .menu-item:hover { background: #f9fafb; color: var(--primary); }
+        .menu-item.active {
+            color: var(--primary);
+            background: rgba(55, 0, 60, 0.04);
+            border-left-color: var(--primary);
+        }
+        
+        .menu-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            margin-top: auto;
+        }
+
+        .logout-btn { 
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #fee2e2;
+            background: #fef2f2; 
+            color: #ef4444;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 700; 
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s; 
+        }
+        .logout-btn:active { background: #fee2e2; transform: scale(0.98); }
+
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            z-index: 150;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.3s;
+            backdrop-filter: blur(2px);
+        }
+        .menu-overlay.open { opacity: 1; visibility: visible; }
+
+        /* =========================================
+           4. SCOREBOARD & DASHBOARD UI
+           ========================================= */
+        .scoreboard {
+            background: linear-gradient(135deg, #37003c 0%, #6a1b6e 100%); /* Pro Gradient */
+            color: white;
+            padding: 24px 20px;
+            border-radius: 24px; /* Smoother Corners */
+            margin-bottom: 25px;
+            box-shadow: 0 20px 40px -10px rgba(55, 0, 60, 0.5); /* Deep Glow */
+            border: 1px solid rgba(255,255,255,0.15); /* Glass Edge */
+            position: relative; overflow: hidden;
+        }
+
+        .manager-name {
+            font-size: 1.1rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            text-align: center;
+        }
+
+        .stat-box { display: flex; flex-direction: column; }
+        .stat-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            opacity: 0.7;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .stat-val { font-size: 1.1rem; font-weight: 800; color: var(--accent); }
+        .stat-val-small { font-size: 0.9rem; font-weight: 700; color: white; }
+
+        /* --- History Graph --- */
+        .hist-box {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            height: 80px;
+            margin: 0 10px 20px 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .hist-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            flex: 1;
+            height: 100%;
+            gap: 4px;
+        }
+        .hist-bar {
+            width: 8px;
+            border-radius: 4px;
+            background: #e5e7eb;
+            transition: height 0.5s ease;
+            min-height: 4px;
+        }
+        .hist-val { font-size: 0.6rem; font-weight: 700; color: var(--text-sub); }
+        .hist-gw { font-size: 0.55rem; color: #9ca3af; font-weight: 600; }
+        
+        .hb-green { background: #10b981; } /* Rank Up */
+        .hb-red { background: #ef4444; }   /* Rank Down */
+        .hb-gray { background: #d1d5db; }  /* Same */
+
+        /* --- Countdown & Chips --- */
+        .countdown-container {
+            display: flex;
+            justify-content: center;
+            margin-top: -15px; /* Pull closer to scoreboard */
+            margin-bottom: 20px;
+        }
+
+        .countdown-pill { 
+            background: rgba(0,0,0,0.04); /* Subtle Status Pill */
+            border-radius: 100px;
+            padding: 6px 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+
+        .cd-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-right: 1px solid #e5e7eb;
+            padding-right: 15px;
+        }
+
+        .cd-time {
+            font-family: 'Courier New', monospace;
+            font-weight: 800;
+            color: var(--primary);
+            font-size: 1rem;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.5px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+        }
+        .status-dot.urgent { background: #e90052; box-shadow: 0 0 0 3px rgba(233, 0, 82, 0.15); }
+
+        .chip-bar {
+            display: flex;
+            gap: 12px; /* Better separation */
+            overflow-x: auto;
+            padding: 4px 20px; /* Side padding for scroll access */
+            margin-bottom: 25px;
+            justify-content: flex-start; /* Fix: Prevents clipping on overflow */
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        .chip-bar::-webkit-scrollbar { display: none; }
+
+        .chip-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 16px; /* Optimized Size */
+            border-radius: 10px; /* Tech block style */
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            text-transform: uppercase;
+        }
+
+        /* Active: Illuminated Token */
+        .chip-pill.active {
+            background: var(--primary);
+            color: var(--accent);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 4px 12px rgba(55, 0, 60, 0.3);
+            transform: translateY(0);
+        }
+        .chip-pill.active:active { transform: scale(0.96); }
+
+        /* Used: Etched Stone Look */
+        .chip-pill.used {
+            background: #e5e7eb; /* Darker Stone for Contrast */
+            color: #6b7280;
+            border: 1px solid #d1d5db; /* Defined Border */
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+            opacity: 1; 
+            text-decoration: none; 
+        }
+
+        /* --- View Toggle --- */
+        .view-toggle {
+            display: flex;
+            background: rgba(118, 118, 128, 0.12); /* iOS Segmented Control */
+            border-radius: 100px;
+            padding: 4px;
+            margin-bottom: 25px;
+            border: none;
+        }
+
+        .vt-btn {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-sub);
+            border-radius: 100px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .vt-btn.active {
+            background: white;
+            color: #111;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+        }
+        
+        .next-fix-pill {
+            font-size: 0.7rem;
+            font-weight: 800;
+            width: 100%;
+            text-align: center;
+            padding: 2px 0;
+            border-radius: 0 0 4px 4px;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* --- Rank Arrows --- */
+        .rank-wrap { display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .r-arrow { font-size: 0.8rem; }
+        .r-green { color: #00ff85; }
+        .r-red { color: #ef4444; }
+        .r-grey { color: #9ca3af; }
+        
+        /* New Stock Ticker Style Pill */
+        .rank-pill { font-size:0.7rem; font-weight:800; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px; color:white; margin-left:6px; }
+        .rp-up { background:#16a34a; }
+        .rp-down { background:#ef4444; }
+
+        .pc-arrow { font-size: 0.6rem; margin-left: 2px; font-weight: 800; }
+        .pc-up { color: #16a34a; }
+        .pc-down { color: #ef4444; }
+
+        /* =========================================
+           5. PITCH & PLAYERS
+           ========================================= */
+        .pitch-wrapper {
+            background: #fff;
+            border-radius: 24px;
+            overflow: hidden;
+            border: none; /* Borderless */
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1); /* Floating Effect */
+            margin-bottom: 25px;
+        }
+
+        .budget-bar {
+            background: white;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-sub);
+        }
+        .budget-val { color: var(--primary); font-weight: 800; }
+        
+        .pitch-loader {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(2px);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: var(--primary);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .pitch-loader.active { opacity: 1; pointer-events: all; }
+        
+        .pitch-container {
+            background-color: var(--grass-1);
+            /* Clean Flat Look - Removed heavy vignette for clarity */
+            background-image: repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0,0,0,0.03) 40px, rgba(0,0,0,0.03) 80px);
+            padding: 25px 5px;
+            position: relative;
+            min-height: 480px;
+        }
+        
+        /* New Captain & CS Styles */
+        .captain-card {
+            border: 2px solid #fbbf24 !important;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+            transform: scale(1.05);
+            z-index: 20;
+        }
+        .cs-shield {
+            position: absolute;
+            top: -6px; right: -6px; left: auto;
+            transform: none;
+            width: 18px; height: 18px;
+            display: flex;
+            align-items: center; justify-content: center;
+            font-size: 0.6rem;
+            color: #064e3b;
+            background: #34d399;
+            border: 1px solid #065f46;
+            border-radius: 4px;
+            z-index: 30;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .pitch-lines {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none; opacity: 0.6;
+        }
+        .pitch-circle {
+            width: 80px; height: 80px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .line-mid {
+            position: absolute;
+            top: 50%; left: 0;
+            width: 100%; height: 2px;
+            background: rgba(255,255,255,0.4);
+        }
+        .box-top {
+            position: absolute; top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 60%; height: 15%;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-top: none;
+        }
+        .box-bot {
+            position: absolute; bottom: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 60%; height: 15%;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-bottom: none;
+        }
+        .field-row {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* --- Bench --- */
+        .bench-wrapper {
+            background: #2d3748; /* Dark Dugout Theme */
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+            box-shadow: inset 0 10px 30px rgba(0,0,0,0.3);
+            margin-top: -10px; /* Connect visually to pitch */
+            position: relative; z-index: 5;
+        }
+        .bench-header {
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: rgba(255,255,255,0.6);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
+            opacity: 1;
+        }
+        .bench-row {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            background: #fdfdfd;
+        }
+        .bench-pill { opacity: 1; /* A11y: Full visibility on dark theme */ }
+        .bench-num {
+            position: absolute;
+            top: -8px; right: -8px; left: auto;
+            background: #374151;
+            color: white;
+            width: 20px; height: 20px; /* Larger visibility */
+            border-radius: 50%;
+            display: flex;
+            align-items: center; justify-content: center;
+            font-size: 0.7rem; /* Readable number */
+            font-weight: 700;
+            z-index: 20;
+            border: 2px solid white; /* Distinct border */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .si-warn { background: #fbbf24; color: #78350f; } /* Font removed for Icon */
+        .si-bad { background: #ef4444; }
+
+        /* --- Player Pill Components --- */
+        .player-pill {
+            background: rgba(255,255,255,0.98);
+            width: 76px; /* Wider for legibility */
+            padding: 8px 2px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.1s;
+            margin-top: 10px;
+            /* Added to match dimensions of cards with borders */
+            border: 2px solid transparent;
+        }
+        .player-pill:active { transform: scale(0.95); }
+
+        .kit-img {
+            width: 36px;
+            height: 46px;
+            object-fit: contain;
+            margin-bottom: -2px;
+            margin-top: 2px;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+        }
+        .pill-name {
+            font-size: 0.75rem; /* Fixed: Larger for readability */
+            font-weight: 750;
+            color: #111;
+            white-space: nowrap;
+            letter-spacing: -0.3px; /* Tighter tracking */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            background: white;
+            margin-top: 2px;
+            padding: 1px 0;
+        }
+        .pill-data {
+            font-size: 0.7rem; /* Fixed: Minimum legible size */
+            color: #444;
+            font-weight: 600;
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            width: 100%;
+            background: #f3f4f6;
+            border-radius: 0 0 4px 4px;
+            padding-bottom: 2px;
+        }
+        .points-badge {
+            background: var(--primary);
+            color: white;
+            padding: 0 4px;
+            border-radius: 3px;
+            font-weight: 700;
+        }
+        .fix-badge {
+            font-size: 0.65rem; /* Increased for readability */
+            font-weight: 750;
+            padding: 2px 5px;
+            border-radius: 3px;
+            position: absolute;
+            top: -6px; left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            z-index: 20;
+        }
+        
+        /* --- Badges & Status --- */
+        .captain-badge {
+            position: absolute;
+            bottom: 30px; right: -4px;
+            background: #111;
+            color: white;
+            border-radius: 50%;
+            width: 16px; height: 16px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            border: 1px solid white;
+            z-index: 15;
+        }
+        .vice-badge { background: #666; }
+
+        /* --- Smart Status Stack (New) --- */
+        .status-stack {
+            position: absolute;
+            top: -4px; left: -4px; 
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            z-index: 25;
+            transform: scale(0.9); /* Reduce visual noise */
+            transform-origin: top left;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
+        }
+        .status-icon {
+            width: 16px; height: 16px; /* Larger touch target */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem; /* Increased from 0.55rem */
+            color: white;
+            border: 1px solid white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .si-fire { background: #ef4444; }
+        .si-cold { background: #3b82f6; }
+        .si-gem { background: #8b5cf6; }
+
+        /* --- Legend --- */
+        .legend-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+            background: transparent;
+            padding: 0;
+            border: none; /* Minimalist */
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--text-sub);
+            text-transform: uppercase;
+        }
+
+        .status-flag {
+            position: absolute;
+            top: -4px; right: -4px;
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            font-weight: 800;
+            border: 1px solid white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            z-index: 25;
+        }
+        .status-warn { background: var(--status-warn); color: #78350f; }
+        .status-bad { background: var(--status-bad); color: white; }
+
+        /* --- Live Match Badges --- */
+        .match-status {
+            position: absolute;
+            top: -20px; left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.65rem; /* Readable */
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+            z-index: 18;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .ms-fix { background: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; } 
+        .ms-live { background: #00ff85; color: #00381b; border: 1px solid #00e676; animation: pulseLive 2s infinite; } 
+        .ms-ft { background: #111827; color: #9ca3af; border: 1px solid #374151; } 
+        @keyframes pulseLive { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+        /* --- Subs & Events --- */
+        .did-not-play { opacity: 0.5; filter: grayscale(1); }
+        .coming-on {
+            border: 2px solid #00ff85;
+            box-shadow: 0 0 10px rgba(0, 255, 133, 0.4);
+            transform: translateY(-4px);
+        }
+        .sub-icon {
+            position: absolute;
+            top: auto; bottom: 26px; left: -4px;
+            background: #00ff85;
+            color: #00381b;
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+            font-weight: 800;
+            border: 1px solid white;
+        }
+        
+        .event-row {
+            position: absolute;
+            bottom: 32px; left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 2px;
+            z-index: 25;
+            align-items: center;
+        }
+        .evt-icon {
+            width: 14px; height: 14px;
+            border-radius: 50%; /* Default circular (Goals/Assists) */
+            font-size: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            border: 1px solid white;
+        }
+        /* Pro Card Shape */
+        .evt-card {
+            width: 10px; height: 13px;
+            border-radius: 2px; /* Rectangular */
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .evt-goal { background: white; color: #111; border-color:#333; }
+        .evt-assist { background: #3b82f6; color: white; border:none; }
+        .evt-red { background: #ef4444; }
+        .evt-yellow { background: #fbbf24; }
+        .evt-own { background: #111; color: #ef4444; }
+
+        /* --- FDR Ticker (Fixture Difficulty) --- */
+        .fdr-row {
+            position: absolute;
+            top: auto; bottom: 42px; left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1px;
+            z-index: 20;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .fdr-dot {
+            width: 26px; height: 18px; 
+            font-size: 0.7rem; /* Increased from 0.65rem */
+            font-weight: 800;
+            color: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        .bg-1 { background: #375523; color: white; }
+        .bg-2 { background: #01fc7a; color: #00381b; }
+        .bg-3 { background: #e5e7eb; color: #374151; }
+        .bg-4 { background: #ff1751; color: white; }
+        .bg-5 { background: #80072d; color: white; }
+
+        /* =========================================
+           6. TRANSFERS & CARDS
+           ========================================= */
+        .t-card {
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            box-shadow: 0 15px 40px -10px rgba(0,0,0,0.08); /* Float effect */
+            border: none;
+        }
+        .t-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: none;
+            background: white; /* Seamless */
+        }
+        .t-type {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .t-gain {
+            background: var(--primary);
+            color: var(--accent);
+            font-weight: 800;
+            font-size: 1.1rem;
+            padding: 8px 14px;
+            border-radius: 10px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .t-bank-tag {
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: #e5e7eb;
+            color: #374151;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        
+        .t-body { display: flex; position: relative; }
+        
+        .t-mid-arrow {
+            position: absolute;
+            left: 50%; top: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 1px solid var(--border);
+            color: var(--text-sub);
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            font-size: 0.8rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .t-half {
+            flex: 1;
+            padding: 20px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        /* No Borders, just soft colors */
+        /* Clean Ticket Style */
+        .t-out { background: transparent; position: relative; }
+        .t-in { background: transparent; }
+        .t-out::after {
+            content: ""; position: absolute; right: 0; top: 10px; bottom: 10px;
+            width: 1px; background: #f3f4f6; /* Subtle Divider */
+        }
+        
+        .t-label {
+            font-size: 0.7rem; /* Readable */
+            font-weight: 800;
+            margin-bottom: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+        }
+        .lbl-out { background: #fee2e2; color: #b91c1c; }
+        .lbl-in { background: #dcfce7; color: #15803d; }
+
+        .t-kit {
+            width: 44px; height: 54px; /* Larger visual */
+            object-fit: contain;
+            margin: 8px 0;
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.15));
+        }
+        .t-name {
+            font-weight: 800;
+            font-size: 0.95rem; /* Stronger hierarchy */
+            margin-bottom: 4px;
+            line-height: 1.1;
+            color: var(--primary);
+        }
+        .t-meta { font-size: 0.8rem; color: #4b5563; font-weight: 600; }
+        .t-net { font-size: 0.75rem; font-weight: 700; margin-top: 4px; }
+        .t-net-pos { color: #16a34a; }
+        .t-net-neg { color: #ef4444; }
+        .t-fdr { display: flex; gap: 2px; margin-top: 6px; justify-content: center; }
+        .t-dot { width: 24px; height: 14px; border-radius: 3px; font-size: 0.55rem; display: flex; align-items: center; justify-content: center; }
+        
+        .t-card.best-pick {
+            border: 2px solid #fbbf24;
+            box-shadow: 0 10px 30px rgba(251, 191, 36, 0.15);
+            transform: scale(1.02);
+            margin-bottom: 30px;
+        }
+        .t-card.best-pick .t-header { background: #fffbeb; }
+        
+        .rec-badge {
+            background: #fbbf24;
+            color: #78350f;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .opt-bench { background: #f3f4f6; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 0.8rem; color: #555; }
+        .opt-bench span { color: #111; font-weight: 700; }
+
+        /* --- Simulation & Scout --- */
+        .sim-banner {
+            background: #e90052;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(233, 0, 82, 0.3);
+            animation: slideDown 0.3s ease;
+        }
+        .sim-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-weight: 800;
+        }
+
+        .preview-btn {
+            width: 100%;
+            margin-top: 15px;
+            padding: 14px; /* Larger Touch Area */
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: var(--primary); /* Primary CTA Color */
+            color: white;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(55, 0, 60, 0.2);
+        }
+        .preview-btn:active { transform: scale(0.98); }
+        .best-pick .preview-btn { background: #fef3c7; color: #78350f; }
+        
+        .sim-new {
+            border: 2px solid #fbbf24 !important;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+            animation: pulseGlow 2s infinite;
+            z-index: 30;
+        }
+        .new-badge {
+            position: absolute;
+            top: -8px; right: -8px;
+            background: #fbbf24;
+            color: #78350f;
+            font-size: 0.6rem;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 6px;
+            z-index: 50;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .search-container {
+            position: sticky; top: 0;
+            background: var(--bg-app);
+            padding: 15px 0;
+            z-index: 40;
+            border-bottom: 1px solid transparent;
+        }
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: white; 
+            border: 1px solid var(--border);
+            border-radius: 12px; 
+            padding: 8px 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.2s ease; /* Smooth transition */
+        }
+        .search-box:focus-within {
+            border-color: var(--primary); /* Brand Focus Color */
+            box-shadow: 0 0 0 4px rgba(55, 0, 60, 0.1); /* Native-feel Ring */
+            transform: translateY(-1px);
+        }
+        .search-box i { color: var(--text-sub); margin-right: 10px; }
+        
+        .search-input { 
+            border: none !important; 
+            outline: none !important; 
+            background: transparent !important; 
+            width: 100%; 
+            font-size: 0.95rem; 
+            font-weight: 500; 
+            padding: 0 !important; 
+            margin: 0 !important; 
+            text-align: left !important;
+            color: var(--text-main);
+        }
+
+        .filter-bar { 
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px; 
+            overflow-x: auto;
+            padding-bottom: 2px;
+            scrollbar-width: none; 
+        }
+        .filter-pill { 
+            flex: 1;
+            padding: 10px 0;
+            background: white; 
+            border: 1px solid var(--border);
+            border-radius: 10px; /* Match Chip Squircle */
+            text-align: center;
+            font-weight: 800;
+            font-size: 0.75rem; 
+            color: var(--text-sub);
+            cursor: pointer;
+            transition: 0.2s; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+        .filter-pill:active { transform: scale(0.96); }
+        .filter-pill.active { 
+            background: var(--primary);
+            color: white; 
+            border-color: var(--primary);
+            box-shadow: 0 4px 10px rgba(55,0,60,0.2); 
+        }
+        
+        .scout-list { display: none; margin-bottom: 20px; }
+        .scout-item { 
+            display: flex;
+            justify-content: space-between;
+            align-items: center; 
+            background: white;
+            padding: 12px;
+            border-radius: 12px; 
+            margin-bottom: 8px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+        }
+        .scout-left { display: flex; align-items: center; gap: 12px; }
+        .scout-info div:first-child { font-weight: 700; font-size: 0.9rem; color: var(--text-main); }
+        .scout-info div:last-child { font-size: 0.75rem; color: var(--text-sub); }
+        .scout-right { text-align: right; }
+        .scout-price { font-weight: 800; color: var(--primary); font-size: 0.9rem; }
+
+        /* --- Trend Cards --- */
+        .trend-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 5px 5px 15px 5px;
+            scrollbar-width: none;
+        }
+        .trend-card { 
+            min-width: 130px;
+            background: white;
+            border: 1px solid var(--border); 
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .trend-card:active { transform: scale(0.98); }
+        .trend-img {
+            width: 45px; height: 58px;
+            object-fit: contain;
+            margin-bottom: 5px;
+            filter: drop-shadow(0 3px 3px rgba(0,0,0,0.2));
+        }
+        .trend-name {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 2px;
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .trend-team { font-size: 0.7rem; color: var(--text-sub); margin-bottom: 6px; }
+        .trend-stat {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--accent);
+            background: #ecfdf5;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        /* =========================================
+           7. MODALS & UTILITIES
+           ========================================= */
+        .scroll-lock { overflow: hidden; } /* Prevent BG Scroll */
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); /* Darker focus */
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+            backdrop-filter: blur(8px); /* Pro Blur */
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .modal-overlay.open { opacity: 1; visibility: visible; }
+        
+        .modal-card {
+            background: white;
+            width: 100%;
+            max-width: 600px;
+            border-radius: 24px 24px 0 0; /* Softer Curve */
+            padding: 25px;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.4);
+            margin: 0;
+            transform: translateY(100%);
+            transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1); /* Spring Physics */
+        }
+        .modal-overlay.open .modal-card { transform: translateY(0); }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center; /* Better alignment */
+            margin-bottom: 20px;
+            padding-bottom: 15px; /* Visual separation */
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .m-player-name { font-size: 1.4rem; font-weight: 800; color: var(--primary); line-height: 1.1; }
+        .m-player-team { font-size: 0.9rem; color: var(--text-sub); }
+        .close-modal {
+            background: #f3f4f6;
+            border: none;
+            width: 44px; height: 44px; /* A11y: Larger Touch Target */
+            border-radius: 50%;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: #666;
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        .m-stats-row { display: flex; gap: 15px; margin-bottom: 20px; }
+        .m-stat-box {
+            background: transparent; /* Clean metric view */
+            padding: 5px;
+            flex: 1;
+            text-align: center;
+            border: none;
+            border-right: 1px solid #f3f4f6; /* Divider only */
+        }
+        .m-stat-box:last-child { border-right: none; }
+        .m-stat-label { font-size: 0.65rem; text-transform: uppercase; color: #888; font-weight: 700; }
+        .m-stat-val { font-size: 1.1rem; font-weight: 800; color: var(--primary); }
+        
+        .m-news {
+            background: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            border: 1px solid #ffeeba;
+            display: none;
+        }
+        
+        /* Modal Fixtures */
+        .fix-list {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 5px 20px 15px 5px; /* Right padding hint */
+            scrollbar-width: none;
+            /* Fade Edge Hint */
+            mask-image: linear-gradient(to right, black 90%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
+        }
+        .fix-box {
+            min-width: 70px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #f9fafb;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .fix-gw-label {
+            font-size: 0.6rem;
+            color: #888;
+            font-weight: 700;
+            padding: 4px 0;
+            width: 100%;
+            text-align: center;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+        }
+        .fix-opp-pill {
+            width: 100%;
+            text-align: center;
+            padding: 8px 0;
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: #111;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex: 1;
+        }
+        .fix-loc { font-size: 0.65rem; font-weight: 500; opacity: 0.8; margin-top: 2px; }
+        
+        .d-1 { background: #375523; color: white; }
+        .d-2 { background: #00ff85; color: #00381b; }
+        .d-3 { background: #e5e7eb; color: #1f2937; }
+        .d-4 { background: #ff1751; color: white; }
+        .d-5 { background: #80072d; color: white; }
+        
+        .modal-actions {
+            margin-top: 20px;
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
+        }
+        .action-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: 0.2s;
+        }
+        .btn-buy {
+            background: #00ff85;
+            color: #00381b;
+            box-shadow: 0 4px 15px rgba(0, 255, 133, 0.3);
+        }
+        .btn-buy:active { transform: scale(0.98); }
+        
+        .rep-list { display: none; margin-top: 15px; animation: slideUp 0.3s ease; }
+        .rep-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f9fafb;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        .rep-item:hover { background: #fee2e2; border-color: #fca5a5; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Leagues Modal */
+        #leaguesList { max-height: 50vh; overflow-y: auto; scrollbar-width: none; }
+        /* Search Clear Button */
+        .clear-btn { color:#9ca3af; padding:5px; cursor:pointer; display:none; }
+        .search-box:focus-within .clear-btn, .search-box:hover .clear-btn { display:block; }
+
+        /* League Rank Cards */
+        .league-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f9fafb;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            transition: 0.2s;
+        }
+        .league-item:active { transform: scale(0.98); background: #f3f4f6; }
+        .lg-name { font-weight: 700; font-size: 0.85rem; color: var(--text-main); }
+        .lg-rank-box { text-align: right; line-height: 1; }
+        .lg-rank { font-weight: 800; font-size: 1rem; color: var(--primary); display:flex; align-items:center; gap:6px; justify-content:flex-end; }
+        
+        /* Util Classes */
+        .welcome-card {
+            text-align: center;
+            padding: 40px 20px;
+            background: #fafafa;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            margin-top: 20px;
+        }
+        /* Standardized Login Input */
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--border); /* Pro styling */
+            border-radius: 12px;
+            text-align: center;
+            margin: 20px 0;
+            outline: none;
+            background: white;
+            font-size: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        input:focus { border-color: var(--primary); }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .demo-alert {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            text-align: center;
+            margin-bottom: 15px;
+            border: 1px solid #ffeeba;
+        }
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(55,0,60,0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 15px auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Logout Overlay */
+        .logout-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.3s;
+            backdrop-filter: blur(4px);
+        }
+        .logout-overlay.open { opacity: 1; visibility: visible; }
+        .logout-card {
+            background: white;
+            width: 90%;
+            max-width: 320px;
+            border-radius: 20px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            transform: scale(0.95);
+            transition: 0.2s;
+        }
+        .logout-overlay.open .logout-card { transform: scale(1); }
+        .logout-actions { display: flex; gap: 10px; margin-top: 24px; }
+        .l-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+        }
+        .l-btn-cancel { background: #f3f4f6; color: #374151; }
+        .l-btn-confirm { background: #ef4444; color: white; }
+
+        /* Chip Planner */
+        .plan-row { display: flex; align-items: center; padding: 15px; background: white; border-bottom: 1px solid var(--border); }
+        .plan-col-gw { font-weight: 800; width: 60px; color: var(--primary); font-size: 0.9rem; }
+        .plan-col-chip { margin-left: auto; }
+        .plan-select { 
+            padding: 6px 28px 6px 14px; /* Right padding for arrow */
+            border-radius: 20px;
+            border: 1px solid var(--border); 
+            font-weight: 700; 
+            color: var(--text-main); 
+            /* Custom Chevron Arrow */
+            background: #f9fafb url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2337003c%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E") no-repeat right 10px center;
+            background-size: 10px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+            -webkit-appearance: none;
+            text-align: left; /* Align text with arrow */
+        }
+        .plan-select:focus { border-color: var(--primary); background: white; }
+
+        /* UI/UX Polish: Skeleton Loading State */
+        .skeleton { background: #f3f4f6; overflow: hidden; position: relative; }
+        .skeleton::after { 
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent); 
+            transform: translateX(-100%); animation: shimmer 1.5s infinite; 
+        }
+        @keyframes shimmer { 100% { transform: translateX(100%); } }
+    </style>
 </head>
+
 <body>
-  <div class="wrap">
-    <header>
-      <div class="brand">
-        <div class="logo"><b>⚽️</b></div>
-        <div>
-          <h1>FPL Assistant</h1>
-          <div class="muted small">Single‑file HTML • Live data • Captain picks • Fixtures • Watchlist</div>
+
+    <div id="leaguesModalOverlay" class="modal-overlay" onclick="document.getElementById('leaguesModalOverlay').classList.remove('open'); document.body.classList.remove('scroll-lock')">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="m-player-name"><i class="fa-solid fa-trophy" style="margin-right:8px;"></i> My Leagues</div>
+                <button class="close-modal" onclick="document.getElementById('leaguesModalOverlay').classList.remove('open'); document.body.classList.remove('scroll-lock')">×</button>
+            </div>
+            <div id="leaguesList" style="padding-bottom: 20px;"></div>
         </div>
-      </div>
-      <div class="row">
-        <button id="refresh" class="btn ghost">Refresh data</button>
-        <a class="btn secondary" href="https://fantasy.premierleague.com/" target="_blank" rel="noreferrer">Open FPL</a>
-      </div>
-    </header><section class="grid">
-  <!-- Left column: team loader & search -->
-  <div class="card" style="grid-column: span 12;">
-    <div class="row">
-      <div class="grow">
-        <label class="small muted">Optional • Your FPL Entry ID</label>
-        <input id="entryId" placeholder="e.g. 1234567" inputmode="numeric" />
-      </div>
-      <div>
-        <label class="small muted"> </label>
-        <button id="loadTeam" class="btn">Load My Team</button>
-      </div>
-      <div class="grow"></div>
     </div>
-    <div class="row" style="margin-top:8px">
-      <div class="grow">
-        <label class="small muted">Search players</label>
-        <input id="search" placeholder="Name or team (e.g., Haaland, City)" />
-      </div>
-      <div style="width:180px">
-        <label class="small muted">Position</label>
-        <select id="posFilter">
-          <option value="">All</option>
-          <option value="1">GK</option>
-          <option value="2">DEF</option>
-          <option value="3">MID</option>
-          <option value="4">FWD</option>
-        </select>
-      </div>
-      <div style="width:180px">
-        <label class="small muted">Sort by</label>
-        <select id="sort">
-          <option value="score">Captain score</option>
-          <option value="form">Form</option>
-          <option value="ppg">Points / game</option>
-          <option value="value">Value (PPG per £)</option>
-        </select>
-      </div>
+    
+    <div id="playerModalOverlay" class="modal-overlay" onclick="closeModal()">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div>
+                    <div class="m-player-name" id="modalName">Player Name</div>
+                    <div class="m-player-team" id="modalTeam">Team • Position</div>
+                </div>
+                <button class="close-modal" onclick="closeModal()">×</button>
+            </div>
+            
+            <div id="modalNews" class="m-news"></div>
+
+            <div class="m-stats-row">
+                <div class="m-stat-box">
+                    <div class="m-stat-label">Form</div>
+                    <div class="m-stat-val" id="modalForm">0.0</div>
+                </div>
+                <div class="m-stat-box">
+                    <div class="m-stat-label">Selected</div>
+                    <div class="m-stat-val" id="modalSel">0%</div>
+                </div>
+                <div class="m-stat-box">
+                    <div class="m-stat-label">Points</div>
+                    <div class="m-stat-val" id="modalPts">0</div>
+                </div>
+            </div>
+
+            <div class="m-section-title">Upcoming Fixtures</div>
+            <div id="modalFixtures" class="fix-list">
+                <div style="font-size:0.8rem; color:#888; padding:10px;">Loading fixtures...</div>
+            </div>
+            
+            <div id="modalActions" class="modal-actions"></div>
+            
+            <div style="height:20px;"></div> 
+        </div>
     </div>
-    <div id="status" class="small muted" style="margin-top:8px">Loading…</div>
-  </div>
 
-  <!-- Captain picks -->
-  <div class="card" style="grid-column: span 6;">
-    <h2>Captain picks (next GW)</h2>
-    <div id="captainList" class="list"></div>
-  </div>
+    <div id="logoutOverlay" class="logout-overlay">
+        <div class="logout-card">
+            <div style="font-size: 1.5rem; margin-bottom: 10px; color:var(--primary);"><i class="fa-solid fa-right-from-bracket"></i></div>
+            <h3 id="lgTitle" style="margin-bottom: 8px; color: var(--text-main);">Log Out?</h3>
+            <p id="lgMsg" style="color: var(--text-sub); font-size: 0.9rem; line-height: 1.4;">Are you sure you want to disconnect your team? You will need your ID to login again.</p>
+            <div class="logout-actions">
+                <button class="l-btn l-btn-cancel" onclick="closeLogout()">Close</button>
+                <button id="lgConfirm" class="l-btn l-btn-confirm" onclick="confirmLogout()">Logout</button>
+            </div>
+        </div>
+    </div>
 
-  <!-- My team / picks -->
-  <div class="card" style="grid-column: span 6;">
-    <h2>My team (if loaded)</h2>
-    <div id="myTeam" class="list small muted">Enter your Entry ID and click “Load My Team”.</div>
-  </div>
+    <div id="menuOverlay" class="menu-overlay" onclick="toggleMenu()"></div>
+    <div id="sideMenu" class="sidebar">
+        <div class="menu-header">FPL Hub</div>
+        <div class="menu-items">
+            <div id="nav-squad" class="menu-item active" onclick="switchTool('squad')">
+                <i class="fa-solid fa-shirt"></i> Squad
+            </div>
+            <div id="nav-transfers" class="menu-item" onclick="switchTool('transfers')">
+                <i class="fa-solid fa-arrow-right-arrow-left"></i> Suggestions
+            </div>
+            <div id="nav-planner" class="menu-item" onclick="switchTool('planner')">
+                <i class="fa-regular fa-calendar-check"></i> Chip Planner
+            </div>
+        </div>
+        <div class="menu-footer">
+            <button class="logout-btn" onclick="clearData()">
+                <i class="fa-solid fa-power-off"></i> Logout
+            </button>
+        </div>
+    </div>
 
-  <!-- Watchlist -->
-  <div class="card" style="grid-column: span 6;">
-    <h2>Watchlist</h2>
-    <div id="watchlist" class="list small muted">Use the search to add players you’re tracking.</div>
-  </div>
+    <div class="app-container">
+        
+        <header>
+            <div class="header-left">
+                <div class="menu-btn" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></div>
+                <div class="brand"><i class="fa-solid fa-bolt"></i> FPL Hub</div>
+            </div>
+            <div class="header-right">
+                <div class="trophy-btn" onclick="app.openLeagues()"><i class="fa-solid fa-trophy"></i></div>
+                <div class="user-avatar" id="userIcon" onclick="clearData()"><i class="fa-regular fa-user"></i></div>
+            </div>
+        </header>
 
-  <!-- Players search results -->
-  <div class="card" style="grid-column: span 6;">
-    <h2>Players</h2>
-    <div id="players" class="list"></div>
-  </div>
+        <div class="content">
+            
+            <div id="welcomeView" class="welcome-card">
+                <div style="font-size: 3rem; margin-bottom: 10px; color:var(--primary);"><i class="fa-regular fa-id-card"></i></div>
+                <h2>Link Team</h2>
+                <p style="color: var(--text-sub); margin-bottom: 20px;">Enter your ID to unlock the Pro Dashboard.</p>
+                <input type="number" id="teamID" placeholder="e.g. 123456">
+                <button class="btn" onclick="app.load()">Connect</button>
+            </div>
 
-  <!-- Fixtures insight -->
-  <div class="card" style="grid-column: span 12;">
-    <h2>Upcoming fixtures (next gameweek)</h2>
-    <div id="fixtures" class="list"></div>
-  </div>
-</section>
+            <div id="loadingView" class="welcome-card hidden" style="padding: 60px 20px;">
+                <div class="spinner"></div>
+                <p id="loadingMsg" style="color: var(--text-sub);">Analysing Squad...</p>
+            </div>
 
-<footer>
-  Built for you with ❤️. Data from the official Fantasy Premier League endpoints. If an FPL endpoint blocks access (privacy/CORS), the app will fall back gracefully.
-</footer>
+            <div id="dashboardView" class="hidden">
+                <div id="demoAlert" class="demo-alert hidden">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Network Busy. Showing <b>Demo Data</b>.
+                </div>
 
-  </div>  <script>
-  ;(() => {
-    const el = (id) => document.getElementById(id)
-    const eStatus = el('status')
-    const ePlayers = el('players')
-    const eCaptainList = el('captainList')
-    const eFixtures = el('fixtures')
-    const eWatch = el('watchlist')
-    const eMyTeam = el('myTeam')
-    const eSearch = el('search')
-    const eSort = el('sort')
-    const ePos = el('posFilter')
+                <div class="scoreboard">
+                    <div class="manager-name" id="dispName">...</div>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">GW Points</div>
+                            <div class="stat-val" id="dispGW">...</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Total Pts</div>
+                            <div class="stat-val-small" id="dispTotal">...</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Rank</div>
+                            <div class="stat-val-small" id="dispRank">...</div>
+                        </div>
+                         
+</div>
+                </div>
 
-    const API = {
-      bootstrap: 'https://fantasy.premierleague.com/api/bootstrap-static/',
-      fixtures: 'https://fantasy.premierleague.com/api/fixtures/?future=1',
-      entry: (id) => `https://fantasy.premierleague.com/api/entry/${id}/`,
-      picks: (id, gw) => `https://fantasy.premierleague.com/api/entry/${id}/event/${gw}/picks/`,
-      elementSummary: (id) => `https://fantasy.premierleague.com/api/element-summary/${id}/`,
-    }
+                <div class="countdown-container">
+                    <div id="gwCountdown" class="countdown-pill">Loading...</div>
+                </div>
 
-    // Simple cache to limit network requests within session
-    const cache = new Map()
-    async function getJSON(url) {
-      if (cache.has(url)) return cache.get(url)
-      const res = await fetch(url, { headers: { 'accept': 'application/json' } })
-      if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`)
-      const data = await res.json()
-      cache.set(url, data)
-      return data
-    }
+                <div id="chipBar" class="chip-bar"></div>
 
-    const state = {
-      events: [],
-      elements: [],
-      teams: [],
-      teamById: new Map(),
-      fixtures: [],
-      currentGw: null,
-      nextGw: null,
-      watch: new Set(JSON.parse(localStorage.getItem('fpl_watchlist') || '[]')),
-    }
+                <div class="view-toggle">
+                    <div id="btn-live" class="vt-btn active" onclick="app.toggleView('live')">
+                        <i class="fa-solid fa-bolt"></i> Live Points
+                    </div>
+                    <div id="btn-next" class="vt-btn" onclick="app.toggleView('next')">
+                        <i class="fa-regular fa-calendar"></i> Next GW
+                    </div>
+                </div>
 
-    function saveWatch() {
-      localStorage.setItem('fpl_watchlist', JSON.stringify([...state.watch]))
-    }
+                <div id="capRecommendation"></div>
 
-    function posShort(type) {
-      return ({1:'GK',2:'DEF',3:'MID',4:'FWD'})[type] || '?'
-    }
+                <div class="legend-bar" style="margin-bottom:10px;">
+                    <div class="legend-item"><div class="status-icon si-fire"><i class="fa-solid fa-fire"></i></div> Hot</div>
+                    <div class="legend-item"><div class="status-icon si-cold"><i class="fa-regular fa-snowflake"></i></div> Cold</div>
+                    <div class="legend-item"><div class="status-icon si-gem"><i class="fa-regular fa-gem"></i></div> Diff</div>
+                </div>
 
-    function price(p) { return `£${(p/10).toFixed(1)}m` }
+                <div class="pitch-wrapper">
+                    <div class="budget-bar">
+                        <span>Bank: <span class="budget-val" id="dispBank">£0.0m</span></span>
+                        <span>Value: <span class="budget-val" id="dispValue">£0.0m</span></span>
+                    </div>
+                    
+                    <div id="viewLoader" class="pitch-loader"><i class="fa-solid fa-circle-notch fa-spin" style="margin-right:8px"></i> Updating...</div>
 
-    function teamName(id) { return state.teamById.get(id)?.name || '?' }
+                    <div class="pitch-container">
+                        <div class="pitch-lines">
+                            <div class="box-top"></div>
+                            <div class="line-mid"></div>
+                            <div class="pitch-circle"></div>
+                            <div class="box-bot"></div>
+                        </div>
+                        <div id="pitchRows"></div>
+                    </div>
+                </div>
 
-    function nextFixtureForTeam(teamId, gwId) {
-      const fx = state.fixtures.filter(f => f.event === gwId && (f.team_h === teamId || f.team_a === teamId))
-      if (!fx.length) return null
-      // If double GW, choose the easier one for captain consideration (lower difficulty for the player's team)
-      const scored = fx.map(f => {
-        const isHome = f.team_h === teamId
-        const oppId = isHome ? f.team_a : f.team_h
-        const diff = isHome ? f.team_h_difficulty : f.team_a_difficulty
-        return { oppId, isHome, diff, f }
-      })
-      scored.sort((a,b) => a.diff - b.diff)
-      return scored[0]
-    }
+                <div class="bench-wrapper">
+                    <div class="bench-header">Substitutes</div>
+                    <div id="benchRow" class="bench-row"></div>
+                </div>
 
-    function captainScoreFor(player, gwId) {
-      const form = parseFloat(player.form || '0') || 0
-      const ppg = parseFloat(player.points_per_game || '0') || 0
-      const posW = ({1:0.0,2:0.45,3:1.0,4:0.9})[player.element_type] || 0.6
-      const fx = nextFixtureForTeam(player.team, gwId)
-      const oppWeight = fx ? (6 - Math.max(1, Math.min(5, fx.diff))) / 5 : 0.6 // 1 (hard) → 0.2, 5 (easy) → 1.0
-      const base = 0.6 * form + 0.4 * ppg
-      return base * (0.7 + 0.3 * oppWeight) * posW
-    }
+                <div id="historyGraph" class="hist-box" style="border-bottom:none;"></div>
+            </div> 
 
-    function valueScore(player) {
-      const ppg = parseFloat(player.points_per_game || '0') || 0
-      const cost = player.now_cost || 1
-      return ppg / cost
-    }
+            <div id="transfersView" class="hidden">
+                <div class="search-container">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="scoutInput" class="search-input" placeholder="Scout players (e.g. Palmer)..." onkeyup="app.searchScout(this.value)">
+                        <i class="fa-solid fa-circle-xmark clear-btn" onclick="app.clearSearch()"></i>
+                    </div>
+                </div>
+                
+                <div class="filter-bar">
+                    <div class="filter-pill" onclick="app.filterPos(1, this)">GK</div>
+                    <div class="filter-pill" onclick="app.filterPos(2, this)">DEF</div>
+                    <div class="filter-pill" onclick="app.filterPos(3, this)">MID</div>
+                    <div class="filter-pill" onclick="app.filterPos(4, this)">FWD</div>
+                </div>
+                
+                <div id="scoutResults" class="scout-list"></div>
 
-    function injuryTag(player) {
-      // status: 'a' available, 'd' doubtful, 'i' injured, 's' suspended, 'n' not available
-      const s = player.status
-      if (s === 'a') return ''
-      if (s === 'd') return '<span class="badge" title="Doubtful">Doubt</span>'
-      if (s === 'i') return '<span class="badge" title="Injured">Inj</span>'
-      if (s === 's') return '<span class="badge" title="Suspended">Susp</span>'
-      if (s === 'n') return '<span class="badge" title="Unavailable">NA</span>'
-      return ''
-    }
+                <div id="transferContent">
+                    <div class="welcome-card">
+                        <div style="font-size: 2.5rem; margin-bottom: 15px; color:#8b5cf6;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                        <h2>Transfer Hub</h2>
+                        <p>Loading market data...</p>
+                    </div>
+                </div>
+            </div>
 
-    function renderPlayerRow(player, gwId, withAddBtn = true) {
-      const team = teamName(player.team)
-      const fx = nextFixtureForTeam(player.team, gwId)
-      const opp = fx ? state.teamById.get(fx.oppId)?.short_name : '—'
-      const diff = fx ? fx.diff : '—'
-      const score = captainScoreFor(player, gwId)
-      const tag = injuryTag(player)
-      const id = player.id
-      const isWatched = state.watch.has(id)
-      return `
-        <div class="player" data-id="${id}">
-          <div>
-            <div class="name">${player.web_name} ${tag}</div>
-            <div class="tag">${posShort(player.element_type)} • ${team}</div>
-          </div>
-          <div class="kv">
-            <div title="Captain score">C: ${score.toFixed(2)}</div>
-            <div title="Form">Form: ${parseFloat(player.form||0).toFixed(2)}</div>
-            <div title="Points per game">PPG: ${parseFloat(player.points_per_game||0).toFixed(2)}</div>
-            <div title="Fixture difficulty">FDR: ${diff}</div>
-            <div title="Price">${price(player.now_cost)}</div>
-          </div>
-          <div>${opp ? `<span class="pill" title="Opponent">vs ${opp}${fx && fx.isHome ? ' (H)' : ' (A)'} </span>` : ''}</div>
-          <div>
-            ${withAddBtn ? `<button class="btn ghost" data-act="${isWatched ? 'rm' : 'add'}">${isWatched ? 'Remove' : 'Watch'}</button>` : ''}
-          </div>
-        </div>`
-    }
+            <div id="plannerView" class="hidden">
+                <div class="welcome-card" style="padding:20px;">
+                    <div style="font-size: 2rem; margin-bottom: 10px; color:#059669;"><i class="fa-solid fa-calendar-days"></i></div>
+                    <h2 style="margin-bottom:5px;">Chip Strategy</h2>
+                    <p style="color:var(--text-sub); margin-bottom:20px; font-size:0.9rem;">Plan your chips for the next 5 weeks.</p>
+                    <div id="plannerGrid" style="border:1px solid var(--border); border-radius:12px; overflow:hidden; text-align:left;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    // =========================================
+    // 1. DATA & HELPERS
+    // =========================================
+    
+    const MOCK_DATA = {
+        user: { name: "Demo Manager", summary_overall_points: 950, summary_event_points: 45, summary_overall_rank: 125000 },
+        bank: 5, value: 1024,
+        picks: [
+            { element: 1, position: 1, multiplier: 1 }, { element: 2, position: 2, multiplier: 1 }, { element: 3, position: 3, multiplier: 1 }, { element: 4, position: 4, multiplier: 1 }, 
+            { element: 5, position: 5, is_vice_captain: true, multiplier: 1 }, { element: 6, position: 6, multiplier: 1 }, { element: 7, position: 7, multiplier: 1 }, { element: 8, position: 8, multiplier: 1 }, 
+            { element: 9, position: 9, is_captain: true, multiplier: 2 }, { element: 10, position: 10, multiplier: 1 }, { element: 11, position: 11, multiplier: 1 }, { element: 12, position: 12, multiplier: 1 }, 
+            { element: 13, position: 13, multiplier: 1 }, { element: 14, position: 14, multiplier: 1 }, { element: 15, position: 15, multiplier: 1 }
+        ],
+        players: {
+            9: { web_name: "Haaland", team_code: 43, pos: 4, price: 14.0, event_points: 13, status: 'd', chance: 75, news: "Knock", sel: 70, form: 8.5, transfers_in: 50000, total_points: 150, ict_index: 300 },
+            5: { web_name: "Salah", team_code: 14, pos: 3, price: 13.0, event_points: 12, status: 'a', chance: 100, news: "", sel: 40, form: 7.0, transfers_in: 30000, total_points: 140, ict_index: 280 },
+            1: { web_name: "Pickford", team_code: 11, pos: 1, price: 4.5, event_points: 6, status: 'a', form: 3.5, transfers_in: 1000, total_points: 50, ict_index: 20 }
+        },
+        fixtures: { 9: { opp: "LIV", diff: 5, is_home: true } }
+    };
 
-    function renderCaptainList(players, gwId) {
-      eCaptainList.innerHTML = players.slice(0, 12).map(p => renderPlayerRow(p, gwId, true)).join('')
-    }
+    // --- GOD MODE TRANSFER BOT (STABLE HARD-CODED) ---
+    const TransferBot = {
+        preCalcTeamData: (fixMap) => {
+            const data = {};
+            for (const [tid, fixList] of Object.entries(fixMap)) {
+                let sum = 0;
+                // Shift: Use index 1 and 2 (Next Upcoming GWs)
+                const limit = Math.min(fixList.length, 3); 
+                for (let i = 1; i < limit; i++) sum += (fixList[i]?.diff || 3);
+                data[tid] = { avg: limit > 1 ? sum / (limit - 1) : 3, nextHome: fixList[1] ? fixList[1].is_home : false };
+            }
+            return data;
+        },
 
-    function bindRowButtons(container, onChange) {
-      container.addEventListener('click', (ev) => {
-        const btn = ev.target.closest('button')
-        if (!btn) return
-        const row = ev.target.closest('.player')
-        const id = Number(row?.dataset?.id)
-        if (!id) return
-        const act = btn.dataset.act
-        if (act === 'add') { state.watch.add(id); saveWatch(); onChange?.() }
-        if (act === 'rm')  { state.watch.delete(id); saveWatch(); onChange?.() }
-      })
-    }
+        getScore: (p, teamData) => {
+            const t = teamData[p.team_id] || { avg: 3, nextHome: false };
+            const form = parseFloat(p.form) || 0;
+            const ict = parseFloat(p.ict_index) || 0;
+            
+            // Refined Logic: Split Defenders vs Attackers
+            let score = 0;
+            if (p.pos <= 2) {
+                // DEF/GK: Prioritize Fixtures (Clean Sheets) over Form
+                score = (form * 2) + (ict * 0.1) + (30 - (t.avg * 6));
+            } else {
+                // MID/FWD: Prioritize Form & Threat over Fixtures
+                score = (form * 6) + (ict * 0.2) + (15 - (t.avg * 2));
+            }
 
-    function renderWatchlist(gwId) {
-      if (!state.watch.size) {
-        eWatch.classList.add('muted')
-        eWatch.innerHTML = 'Use the search to add players you’re tracking.'
-        return
-      }
-      eWatch.classList.remove('muted')
-      const byId = new Map(state.elements.map(p => [p.id, p]))
-      const list = [...state.watch]
-        .map(id => byId.get(id))
-        .filter(Boolean)
-        .sort((a,b) => captainScoreFor(b, gwId) - captainScoreFor(a, gwId))
-      eWatch.innerHTML = list.map(p => renderPlayerRow(p, gwId, true)).join('')
-    }
+            if (p.status !== 'a' && p.chance < 75) score -= 200;
+            if (p.pos === 1) score *= 0.85; 
+            if (t.nextHome) score += 2; 
 
-    function renderPlayersList(list, gwId) {
-      ePlayers.innerHTML = list.slice(0, 100).map(p => renderPlayerRow(p, gwId, true)).join('')
-    }
+            return score;
+        },
 
-    function filterPlayers() {
-      const q = (eSearch.value || '').trim().toLowerCase()
-      const pos = ePos.value
-      const arr = state.elements.filter(p => {
-        if (pos && String(p.element_type) !== pos) return false
-        if (!q) return true
-        const t = state.teamById.get(p.team)
-        const hay = `${p.first_name} ${p.second_name} ${p.web_name} ${t?.name} ${t?.short_name}`.toLowerCase()
-        return hay.includes(q)
-      })
-      const gwId = state.nextGw?.id || state.currentGw?.id || state.events?.[0]?.id
-      const sort = eSort.value
-      arr.sort((a,b) => {
-        if (sort === 'form') return (parseFloat(b.form||0) - parseFloat(a.form||0))
-        if (sort === 'ppg') return (parseFloat(b.points_per_game||0) - parseFloat(a.points_per_game||0))
-        if (sort === 'value') return (valueScore(b) - valueScore(a))
-        return (captainScoreFor(b, gwId) - captainScoreFor(a, gwId))
-      })
-      renderPlayersList(arr, gwId)
-    }
+        recommendFormation: (myPicks, allPlayers, fixtures) => {
+            const teamStats = TransferBot.preCalcTeamData(fixtures);
+            const rated = myPicks.map(pick => {
+                const p = allPlayers[pick.element];
+                return { p, score: TransferBot.getScore(p, teamStats) };
+            });
+            const gk = rated.filter(x => x.p.pos === 1).sort((a,b) => b.score - a.score)[0];
+            const outfield = rated.filter(x => x.p.pos !== 1);
+            
+            const formations = [[3,4,3], [3,5,2], [4,3,3], [4,4,2], [4,5,1], [5,3,2], [5,4,1], [5,2,3]];
+            let bestForm = null, maxScore = -9999, bestLineup = [];
 
-    function renderFixturesNextGw() {
-      const gw = state.nextGw || state.currentGw
-      if (!gw) { eFixtures.innerHTML = '<span class="muted">No gameweek data.</span>'; return }
-      const fx = state.fixtures.filter(f => f.event === gw.id)
-      if (!fx.length) { eFixtures.innerHTML = '<span class="muted">No fixtures found for next GW.</span>'; return }
-      fx.sort((a,b) => (a.kickoff_time || '').localeCompare(b.kickoff_time || ''))
-      eFixtures.innerHTML = fx.map(f => {
-        const h = state.teamById.get(f.team_h)
-        const a = state.teamById.get(f.team_a)
-        const dd = `${h?.short_name} (H${f.team_h_difficulty}) vs ${a?.short_name} (A${f.team_a_difficulty})`
-        const when = f.kickoff_time ? new Date(f.kickoff_time).toLocaleString() : 'TBD'
-        return `<div class="player"><div><div class="name">${h?.name} vs ${a?.name}</div><div class="tag">${when}</div></div><div class="kv"><div>H FDR: ${f.team_h_difficulty}</div><div>A FDR: ${f.team_a_difficulty}</div></div><div></div><div></div></div>`
-      }).join('')
-    }
+            formations.forEach(f => {
+                const defs = outfield.filter(x => x.p.pos === 2).sort((a,b) => b.score - a.score).slice(0, f[0]);
+                const mids = outfield.filter(x => x.p.pos === 3).sort((a,b) => b.score - a.score).slice(0, f[1]);
+                const fwds = outfield.filter(x => x.p.pos === 4).sort((a,b) => b.score - a.score).slice(0, f[2]);
+                if (defs.length === f[0] && mids.length === f[1] && fwds.length === f[2]) {
+                    const total = gk.score + [...defs, ...mids, ...fwds].reduce((a,b) => a + b.score, 0);
+                    if (total > maxScore) { maxScore = total; bestForm = f.join('-'); bestLineup = [gk.p.id, ...defs.map(x=>x.p.id), ...mids.map(x=>x.p.id), ...fwds.map(x=>x.p.id)]; }
+                }
+            });
+            const bench = rated.filter(x => !bestLineup.includes(x.p.id)).sort((a,b) => {
+                if (a.p.pos === 1) return -1;
+                if (b.p.pos === 1) return 1;
+                return b.score - a.score;
+            });
+            return { formation: bestForm, bench: bench.map(x => x.p), bestLineup };
+        },
 
-    async function loadBootstrap() {
-      const data = await getJSON(API.bootstrap)
-      state.events = data.events || []
-      state.elements = (data.elements || []).filter(p => p?.now_cost)
-      state.teams = data.teams || []
-      state.teamById = new Map(state.teams.map(t => [t.id, t]))
-      state.currentGw = state.events.find(e => e.is_current) || null
-      state.nextGw = state.events.find(e => e.is_next) || null
-    }
+        analyze: (myPicks, allPlayers, bank, fixtures, ftCount) => {
+            let singleMoves = [];
+            let finalSuggestions = [];
 
-    async function loadFixtures() {
-      const data = await getJSON(API.fixtures)
-      state.fixtures = data || []
-    }
+            // A. Prepare Data
+            const teamStats = TransferBot.preCalcTeamData(fixtures);
 
-    function pickTopCaptains() {
-      const gwId = state.nextGw?.id || state.currentGw?.id || state.events?.[0]?.id
-      const candidates = state.elements.filter(p => p.element_type >= 2) // ignore GK
-      const ranked = candidates
-        .map(p => ({ p, s: captainScoreFor(p, gwId) }))
-        .sort((a,b) => b.s - a.s)
-        .slice(0, 30)
-        .map(x => x.p)
-      renderCaptainList(ranked, gwId)
-    }
+            // B. Score Squad
+            const squadScores = myPicks.map(pick => {
+                const p = allPlayers[pick.element];
+                if (!p) return null; // Allow GK
+                return { p: p, score: TransferBot.getScore(p, teamStats) };
+            }).filter(x => x).sort((a,b) => a.score - b.score);
 
-    function bindSearchEvents() {
-      ;[eSearch, eSort, ePos].forEach(ctrl => ctrl.addEventListener('input', filterPlayers))
-      bindRowButtons(ePlayers, () => { filterPlayers(); renderWatchlist(state.nextGw?.id || state.currentGw?.id) })
-      bindRowButtons(eWatch, () => { renderWatchlist(state.nextGw?.id || state.currentGw?.id) })
-      bindRowButtons(eCaptainList, () => { renderWatchlist(state.nextGw?.id || state.currentGw?.id) })
-    }
+            // C. Score Market (Top 200 to ensure coverage across all positions)
+            const marketScores = Object.values(allPlayers)
+                .filter(p => p.status === 'a' && parseFloat(p.form) > 0.5) 
+                .map(p => ({ p: p, score: TransferBot.getScore(p, teamStats) }))
+                .sort((a,b) => b.score - a.score)
+                .slice(0, 200);
 
-    async function loadMyTeam(entryId) {
-      const gwId = state.currentGw?.id || state.events.find(e => e.is_next)?.id || state.events?.[0]?.id
-      eMyTeam.innerHTML = '<span class="muted">Loading your team…</span>'
-      try {
-        // Fetch entry (basic info, for validation/owner)
-        await getJSON(API.entry(entryId))
-      } catch (e) {
-        eMyTeam.innerHTML = `<span class="danger">Could not find Entry ID <b>${entryId}</b>. Check the number and try again.</span>`
-        return
-      }
-      try {
-        const picks = await getJSON(API.picks(entryId, gwId))
-        const byId = new Map(state.elements.map(p => [p.id, p]))
-        const rows = []
-        const caption = []
-        for (const pk of (picks.picks || [])) {
-          const pl = byId.get(pk.element)
-          if (!pl) continue
-          rows.push(renderPlayerRow(pl, state.nextGw?.id || gwId, false))
-          if (pk.is_captain) caption.push(`<span class="pill">Your current captain: <b>${pl.web_name}</b></span>`)
-          if (pk.is_vice_captain) caption.push(`<span class="pill">Vice‑captain: <b>${pl.web_name}</b></span>`)
+            // --- CHAIN BUILDER (1 to 5 Moves) ---
+            const buildChain = () => {
+                let curPicks = [...myPicks];
+                let curBank = bank;
+                let usedOut = new Set();
+                let usedIn = new Set();
+                let pathOut = [];
+                let pathIn = [];
+                let rawDiff = 0;
+                const labels = ["Single", "Double", "Triple", "Quad", "Quint"];
+
+                // Limit chain depth: suggest moves up to FT count + 1 (allow 1 hit)
+                const maxSteps = Math.min(5, ftCount + 1);
+
+                for (let step = 0; step < maxSteps; step++) {
+                    let bestLink = null;
+                    // Find removable players (not already in chain)
+                    const candidates = squadScores.filter(x => !usedOut.has(x.p.id));
+                    
+                    // Look for best single swap to extend chain
+                    for (let i = 0; i < Math.min(8, candidates.length); i++) {
+                        const sell = candidates[i];
+                        
+                        // FIX: Conservative Sell Price (Account for 50% Profit Tax)
+                        const pick = myPicks.find(p => p.element === sell.p.id);
+                        let sellPrice = sell.p.price;
+                        
+                        // FIX: Calculate Dynamic Selling Price (Purchase Price vs Fresh Current Price)
+                        // Use the exact selling price we calculated during app.load
+                        // Note: Public API does NOT provide selling_price, so we rely entirely on our app.load calculation
+                        if (pick && typeof pick.selling_price === 'number') {
+                            sellPrice = pick.selling_price / 10;
+                        }
+
+                        // FIX: Strict Integer Math (x10) to prevent floating point drift (e.g. 0.1 + 0.2 != 0.3)
+                        const budgetInt = Math.round((curBank + sellPrice) * 10);
+                        
+                        for (const buyObj of marketScores) {
+                            if (buyObj.p.pos !== sell.p.pos) continue;
+                            
+                            // Check Price using Integers (Exact Match)
+                            if (Math.round(buyObj.p.price * 10) > budgetInt) continue;
+
+                            if (curPicks.some(p => p.element === buyObj.p.id) || usedIn.has(buyObj.p.id)) continue;
+                            
+                            // Check Max 3 Players Per Team Rule
+                            const tId = buyObj.p.team_id;
+                            const countExisting = curPicks.filter(p => allPlayers[p.element].team_id === tId && !usedOut.has(p.element) && p.element !== sell.p.id).length;
+                            const countAdded = [...usedIn].filter(id => allPlayers[id].team_id === tId).length;
+                            if ((countExisting + countAdded) >= 3) continue;
+
+                            const gain = buyObj.score - sell.score;
+                            // Update best link for this step if gain is higher
+                            if (gain > 0.1 && (!bestLink || gain > bestLink.gain)) {
+                                bestLink = { sell: sell.p, buy: buyObj.p, gain, sellPrice };
+                            }
+                        }
+                    }
+
+                    if (bestLink) {
+                        usedOut.add(bestLink.sell.id);
+                        usedIn.add(bestLink.buy.id);
+                        pathOut.push(bestLink.sell);
+                        pathIn.push(bestLink.buy);
+                        curBank = curBank + bestLink.sellPrice - bestLink.buy.price;
+                        rawDiff += bestLink.gain;
+                        
+                        // Calculate cost
+                        const hitCost = Math.max(0, (step + 1) - ftCount) * 4;
+                        const netDiff = parseFloat((rawDiff - hitCost).toFixed(1));
+
+                        // Push this stage of the chain
+                        if (netDiff > 0.5) {
+                            finalSuggestions.push({
+                                type: `${labels[step]} Move${hitCost > 0 ? ` (-${hitCost})` : ''}`, 
+                                out: [...pathOut],
+                                in: [...pathIn],
+                                diff: netDiff
+                            });
+                        }
+                    } else {
+                        break; // Stop if we can't improve further
+                    }
+                }
+            };
+            buildChain();
+
+            // 4. Sort & Roll
+            finalSuggestions.sort((a, b) => b.diff - a.diff);
+            const bestDiff = finalSuggestions.length > 0 ? finalSuggestions[0].diff : 0;
+            if (ftCount < 5 && bestDiff < 8.0) {
+                finalSuggestions.unshift({ type: 'Roll Transfer', out: [], in: [], diff: 0.0 });
+            }
+
+            return finalSuggestions.slice(0, 5);
+        },
+
+        recommendChips: (picks, fixMap, currentGW, history) => {
+            const used = history.chips.map(c => c.name);
+            const next5 = [0,1,2,3,4].map(i => currentGW + i);
+            let rec = null;
+
+            // 1. Wildcard (Long-term Crisis Check)
+            if (!used.includes('wildcard')) {
+                let badCount = 0;
+                picks.forEach(p => {
+                    const f = fixMap[p.element] || [];
+                    // Avg diff of next 3 games > 3.5 implies tough run
+                    const avg = (f.slice(0,3).reduce((a,b)=>a+(b.diff||3),0))/3;
+                    if (avg > 3.5) badCount++;
+                });
+                if (badCount >= 5) rec = { chip: 'Wildcard', gw: next5[0], reason: "Detected severe fixture turn for 5+ players." };
+            }
+
+            // 2. Free Hit (Short-term Crisis Check)
+            if (!used.includes('freehit') && !rec) {
+                const starters = picks.filter(p => p.position <= 11);
+                const totalDiff = starters.reduce((acc, p) => acc + ((fixMap[p.element]||[])[0]?.diff || 3), 0);
+                // Avg difficulty > 4.0 implies crisis week
+                if ((totalDiff / 11) > 4.0) rec = { chip: 'Free Hit', gw: next5[0], reason: "Extreme fixture difficulty detected for this week only." };
+            }
+
+            // 3. Triple Captain
+            if (!used.includes('3xc') && !rec) {
+                next5.forEach(gw => {
+                    picks.forEach(p => {
+                        if ((p.element === 9 || p.element === 5) && p.multiplier > 0) {
+                            const f = (fixMap[p.element] || [])[gw - currentGW];
+                            if (f && f.diff < 2) rec = { chip: 'Triple Captain', gw: gw, reason: `${p.element === 9 ? 'Haaland' : 'Salah'} has an easy fixture (Diff 1).` };
+                        }
+                    });
+                });
+            }
+            
+            // 4. Bench Boost
+            if (!used.includes('bboost') && !rec) {
+                const bench = picks.filter(p => p.position > 11);
+                const isEasy = bench.every(p => {
+                    const f = (fixMap[p.element] || [])[0];
+                    return f && f.diff <= 3;
+                });
+                if (isEasy) rec = { chip: 'Bench Boost', gw: next5[0], reason: "All 4 bench players have favorable fixtures." };
+            }
+
+            // 5. Default (Save)
+            if (!rec) {
+                rec = { chip: 'Save Chips', gw: next5[0], reason: "Team looks solid. Hold chips for Double Gameweeks." };
+            }
+
+            return rec;
+        },
+
+        analyzeCaptaincy: (picks, players, fixMap, fixIdx = 0) => {
+            let cur = null, curVice = null;
+            const ranked = [];
+            picks.forEach(p => {
+                if (p.position > 11) return;
+                const pl = players[p.element];
+                if (!pl) return;
+                // Score: Form + (5 - FixtureDiff)*2 + HomeAdvantage
+                const f = (fixMap[pl.team_id]||[])[fixIdx] || {diff:3, is_home:false};
+                let score = parseFloat(pl.form) + ((5 - f.diff) * 2.5) + (f.is_home ? 1 : 0);
+                
+                if (p.is_captain) cur = { name: pl.name, score };
+                if (p.is_vice_captain) curVice = { name: pl.name, score };
+                
+                ranked.push({ name: pl.name, score });
+            });
+            ranked.sort((a, b) => b.score - a.score);
+            return (cur && ranked.length > 0) ? { best: ranked[0], vice: ranked[1] || null, cur, curVice } : null;
         }
-        // Suggest the best captain from loaded squad (by our score)
-        const picksPlayers = (picks.picks || []).map(pk => byId.get(pk.element)).filter(Boolean)
-        const best = picksPlayers.slice().sort((a,b) => captainScoreFor(b, state.nextGw?.id || gwId) - captainScoreFor(a, state.nextGw?.id || gwId))[0]
-        const suggestion = best ? `<div class="row" style="margin:8px 0"><span class="pill" style="background:#13213a;border-color:#2a3d5e">Suggested captain: <b>${best.web_name}</b></span></div>` : ''
-        eMyTeam.classList.remove('muted')
-        eMyTeam.innerHTML = `${caption.join(' ')} ${suggestion}` + (rows.join('') || '<span class="muted">No picks found.</span>')
-      } catch (e) {
-        eMyTeam.innerHTML = `<span class="warn">I couldn’t load your picks for GW ${gwId}. This can happen if FPL restricts access or due to CORS. You can still use captain picks, fixtures and the watchlist.</span>`
-      }
-    }
+    };
 
-    async function init() {
-      try {
-        eStatus.textContent = 'Fetching FPL data…'
-        await Promise.all([loadBootstrap(), loadFixtures()])
-        pickTopCaptains()
-        filterPlayers()
-        renderWatchlist(state.nextGw?.id || state.currentGw?.id)
-        renderFixturesNextGw()
-        const next = state.nextGw || state.currentGw
-        if (next) {
-          const deadline = new Date(next.deadline_time)
-          eStatus.innerHTML = `Next GW: <b>${next.name}</b> • Deadline: ${deadline.toLocaleString()} • Data refreshed.`
+    const MarketBot = {
+        getTrends: (allPlayers) => {
+            const players = Object.values(allPlayers);
+            const movers = [...players].sort((a, b) => b.transfers_in - a.transfers_in).slice(0, 5);
+            return { movers };
+        }
+    };
+
+    // =========================================
+    // 2. MAIN APPLICATION
+    // =========================================
+
+    const app = {
+        userData: null, playersCache: {}, fixMap: {}, currentPicks: [], currentBank: 0,
+        teams: null, currentTool: 'squad', historyData: null, deadline: null, gwName: '',
+        
+        clearSearch: () => {
+            const el = document.getElementById('scoutInput');
+            el.value = '';
+            app.searchScout('');
+            el.focus();
+        },
+        
+        updateBank: () => {
+            const current = (app.currentBank).toFixed(1);
+            const newVal = prompt("Sync Bank Balance:\nEnter your exact bank from the Official FPL site (e.g. 1.5):", current);
+            if (newVal !== null && !isNaN(parseFloat(newVal))) {
+                app.currentBank = parseFloat(newVal);
+                app.switchTool('transfers', true); // Refresh view
+            }
+        },
+        currentStats: null, isSimulating: false, simNewIds: [], timer: null, statusMap: {},
+        viewMode: 'live', ftCount: 1, lastEvents: {}, liveInterval: null, bonusMap: {},
+        deadlineNotified: false, dayNotified: false, fixtureCache: {}, suggestionCache: null, searchTimer: null,
+
+        init: () => {
+            if ('Notification' in window) Notification.requestPermission();
+            const savedId = localStorage.getItem('fpl_id_final');
+            const lastTool = localStorage.getItem('fpl_last_tool');
+            if (lastTool) app.currentTool = lastTool;
+            if (savedId) {
+                document.getElementById('teamID').value = savedId;
+                app.load(savedId);
+            }
+            // Fix: Initialize Browser History State
+            history.replaceState({ tool: app.currentTool }, '', '');
+        },
+
+        fetchUrl: async (targetUrl) => {
+            const proxies = [
+                (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`, 
+                (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+                (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+                (url) => `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(url)}`
+            ];
+            for (let i = 0; i < proxies.length; i++) {
+                try {
+                    // Increased to 6s to allow large files (bootstrap) to finish on slow networks
+                    const c = new AbortController(); const id = setTimeout(() => c.abort(), 6000); 
+                    const r = await fetch(proxies[i](targetUrl), { signal: c.signal }); clearTimeout(id);
+                    if (r.ok) return await r.json();
+                } catch (e) {}
+            }
+            throw new Error("Failed");
+        },
+
+        calcFreeTransfers: () => {
+            if (!app.historyData || !app.historyData.current) return 1;
+            let saved = 0;
+            app.historyData.current.forEach(gw => {
+                let available = 1 + saved;
+                if (available > 5) available = 5;
+                const used = gw.event_transfers;
+                saved = available - used;
+                if (saved < 0) saved = 0;
+            });
+            let current = saved + 1;
+            if (current > 5) current = 5;
+            return current;
+        },
+
+        show: (viewId) => {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            ['welcomeView', 'loadingView', 'dashboardView', 'transfersView', 'plannerView'].forEach(v => document.getElementById(v).classList.add('hidden'));
+            document.getElementById(viewId).classList.remove('hidden');
+        },
+
+        toggleMenu: () => {
+            document.getElementById('sideMenu').classList.toggle('open');
+            document.getElementById('menuOverlay').classList.toggle('open');
+        },
+
+        switchTool: (t, suppressMenu = false, fromHistory = false) => {
+            if (!fromHistory) history.pushState({ tool: t }, '', ''); // Push new state
+            if (!suppressMenu) app.toggleMenu();
+            
+            app.currentTool = t;
+            localStorage.setItem('fpl_last_tool', t);
+            
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('nav-' + t).classList.add('active');
+
+            if (t === 'squad') {
+                app.isSimulating = false;
+                app.simNewIds = [];
+                const banner = document.querySelector('.sim-banner');
+                if (banner) banner.remove();
+                if (Object.keys(app.playersCache).length > 0) app.render(app.userData, app.currentPicks, app.playersCache, app.fixMap, app.statusMap, app.currentStats, app.historyData, app.deadline, app.gwName);
+                else app.load(localStorage.getItem('fpl_id_final'));
+
+            } else if (t === 'planner') {
+                app.show('plannerView');
+                app.renderPlanner();
+
+            } else {
+                // --- FIXED AUTO-RELOAD LOGIC ---
+                app.show('transfersView');
+                
+                // Clear UI to force a visual "Reload" effect
+                document.querySelector('.search-input').value = '';
+                document.getElementById('scoutResults').style.display = 'none';
+                // ... (rest of transfer logic remains below) ...
+                document.getElementById('transferContent').style.display = 'block';
+
+                app.ftCount = app.calcFreeTransfers();
+
+                // Memoization: Check Cache
+                const sig = app.currentPicks.map(p => p.element).join('-') + '|' + app.currentBank + '|' + app.ftCount;
+                if (app.suggestionCache && app.suggestionCache.sig === sig) {
+                    document.getElementById('transferContent').innerHTML = app.suggestionCache.html;
+                    return;
+                }
+
+                const bankTxt = app.currentStats ? (app.currentStats.bank/10).toFixed(1) : '0.0';
+                
+                // Show Skeleton Loader (Perceived Performance)
+                const headerHtml = `
+                    <div style="display:flex; justify-content:space-between; padding:15px; background:white; border-bottom:1px solid var(--border); margin:-15px -15px 15px -15px;">
+                        <div style="font-size:0.85rem; font-weight:700; color:var(--text-sub);">Bank: <span style="color:var(--primary); cursor:pointer; border-bottom:1px dashed var(--primary);" onclick="app.updateBank()" title="Click to fix budget">£${bankTxt}m <i class="fa-solid fa-pen" style="font-size:0.7rem;"></i></span></div>
+                        <div style="font-size:0.85rem; font-weight:700; color:var(--text-sub);">Free Transfers: <span style="color:${app.ftCount === 5 ? 'var(--primary)' : '#00ff85'}; font-weight:800;">${app.ftCount}</span></div>
+                    </div>
+                    <div style="padding:0 10px;">
+                        <div class="t-card skeleton" style="height:140px; margin-bottom:20px; border-radius:24px;"></div>
+                        <div class="t-card skeleton" style="height:140px; margin-bottom:20px; border-radius:24px;"></div>
+                    </div>
+                `;
+                
+                const container = document.getElementById('transferContent');
+                container.innerHTML = headerHtml;
+
+                // WRAPPED IN TRY/CATCH TO PREVENT INFINITE SPINNER
+                setTimeout(() => {
+                    try {
+                        // Safety Check: Do we have data?
+                        if (!app.currentPicks || app.currentPicks.length === 0 || Object.keys(app.playersCache).length === 0) {
+                             throw new Error("No data loaded");
+                        }
+
+                        const suggestions = TransferBot.analyze(app.currentPicks, app.playersCache, app.currentBank, app.fixMap, app.ftCount);
+                        // Removed Optimal Lineup Calculation
+                        const market = MarketBot.getTrends(app.playersCache);
+                        
+                        let html = `
+                        <div style="display:flex; justify-content:space-between; padding:10px 15px; background:white; border-radius:12px; border:1px solid var(--border); margin-bottom:20px;">
+                            <div style="font-size:0.85rem; font-weight:700; color:var(--text-sub);">Bank: <span style="color:var(--primary);">£${bankTxt}m</span></div>
+                            <div style="font-size:0.85rem; font-weight:700; color:var(--text-sub);">Free Transfers: <span style="color:${app.ftCount === 5 ? '#e90052' : '#00ff85'}; font-weight:800;">${app.ftCount}</span></div>
+                        </div>`;
+
+                        if (suggestions.length > 0) {
+                            suggestions.forEach((s, index) => {
+                                const isBest = index === 0;
+                                const cardClass = isBest ? 't-card best-pick' : 't-card';
+                                const badge = isBest ? '<div class="rec-badge"><i class="fa-solid fa-star"></i> AI RECOMMENDED</div>' : '';
+                                
+                                if (index === 0) html += `<div style="font-size:1.1rem; font-weight:800; margin-bottom:10px; padding-left:5px;">Strategy</div>`;
+                                else if (index === 1) html += `<div style="font-size:0.9rem; font-weight:700; color:#888; margin:20px 0 10px 0; padding-left:5px;">Alternative Options</div>`;
+
+                                if (s.type === 'Roll Transfer') {
+                                    html += `<div class="${cardClass}" style="padding:25px; text-align:center;">${badge}<div style="font-size:2rem; margin:10px 0; color:#059669;"><i class="fa-solid fa-shield-halved"></i></div><div style="font-weight:800; margin-bottom:5px; font-size:1.1rem;">Save Free Transfer</div><div style="font-size:0.85rem; color:#666; line-height:1.4;">Your team is strong. You have ${app.ftCount} FTs. Saving one gives you flexibility next week.</div></div>`;
+                                    return;
+                                }
+                               
+                                const outIds = JSON.stringify(s.out.map(p => p.id));
+                                const inIds = JSON.stringify(s.in.map(p => p.id));
+                                
+                                // FIX: Use Real Selling Price for Bank Calculation
+                                const bankRem = (app.currentBank + s.out.reduce((a,b)=> {
+                                    const p = app.currentPicks.find(px => px.element === b.id);
+                                    return a + (p && p.selling_price ? p.selling_price/10 : b.price);
+                                },0) - s.in.reduce((a,b)=>a+b.price,0)).toFixed(1);
+                                
+                                let verdict = '';
+                                if (s.type.includes('(-') && s.diff > 6) verdict = '<span style="font-size:0.65rem; font-weight:800; color:#16a34a; background:#dcfce7; padding:2px 6px; border-radius:4px; margin-left:4px;"><i class="fa-regular fa-gem"></i> Worth Hit</span>';
+                                else if (!s.type.includes('(-') && app.ftCount > 1) verdict = '<span style="font-size:0.65rem; font-weight:800; color:#2563eb; background:#dbeafe; padding:2px 6px; border-radius:4px; margin-left:4px;"><i class="fa-solid fa-star"></i> Use FT</span>';
+                                else if (s.diff > 8) verdict = '<span style="font-size:0.65rem; font-weight:800; color:#d97706; background:#fef3c7; padding:2px 6px; border-radius:4px; margin-left:4px;"><i class="fa-solid fa-fire-flame-curved"></i> Hot</span>';
+
+                                // Strategy Badge Logic
+                                let stratBadge = '';
+                                if (s.out.length > 0 && s.in.length > 0) {
+                                    const pOut = s.out[0], pIn = s.in[0]; 
+                                    const outF = (app.fixMap[pOut.team_id]||[]).slice(1,4).reduce((a,b)=>a+(b.diff||3),0);
+                                    const inF = (app.fixMap[pIn.team_id]||[]).slice(1,4).reduce((a,b)=>a+(b.diff||3),0);
+                                    
+                                    if ((outF - inF) >= 3) stratBadge = '<span style="font-size:0.6rem; background:#dcfce7; color:#166534; padding:2px 6px; border-radius:4px; font-weight:800; border:1px solid #bbf7d0; margin-left:4px;">Fixture Swing</span>';
+                                    else if ((parseFloat(pIn.form)-parseFloat(pOut.form)) > 2.0) stratBadge = '<span style="font-size:0.6rem; background:#ffedd5; color:#9a3412; padding:2px 6px; border-radius:4px; font-weight:800; border:1px solid #fed7aa; margin-left:4px;">Form Upgrade</span>';
+                                    else if ((pOut.price - pIn.price) > 0.5) stratBadge = '<span style="font-size:0.6rem; background:#e0e7ff; color:#3730a3; padding:2px 6px; border-radius:4px; font-weight:800; border:1px solid #c7d2fe; margin-left:4px;">Frees Funds</span>';
+                                }
+
+                                // FIX: Added flex-wrap:wrap to prevent badge overflow on mobile
+                                html += `<div class="${cardClass}"><div class="t-header" style="align-items:center;"><div>${badge}<div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:4px;"><div class="t-type">${s.type}</div>${verdict}${stratBadge}</div><div class="t-bank-tag">Bank: £${bankRem}m</div></div><div class="t-gain">+${s.diff}</div></div><div class="t-body"><div class="t-mid-arrow"><i class="fa-solid fa-arrow-right"></i></div><div class="t-half t-out"><span class="t-label lbl-out">SELL</span>`;
+                                s.out.forEach(p => {
+                                    const fixtures = app.fixMap[p.team_id] || [];
+                                    let dots = '<div class="t-fdr">';
+                                    // Slice 1,4 to skip current GW and show next available
+                                    fixtures.slice(1, 4).forEach(f => { if(f) dots += `<div class="t-dot bg-${f.diff}">${f.opp}</div>` });
+                                    dots += '</div>';
+                                    const pc = p.cost_change > 0 ? '<span class="pc-arrow pc-up">▲</span>' : (p.cost_change < 0 ? '<span class="pc-arrow pc-down">▼</span>' : '');
+                                    
+                                    const net = (p.transfers_in || 0) - (p.transfers_out || 0);
+                                    const netClass = net >= 0 ? 't-net-pos' : 't-net-neg';
+                                    const netStr = (Math.abs(net) > 999) ? (net/1000).toFixed(1) + 'k' : net;
+                                    
+                                    const warn = p.status === 'd' ? '<i class="fa-solid fa-triangle-exclamation" style="color:#fbbf24; margin-left:4px; font-size:0.75rem;"></i>' : (['i','s','n'].includes(p.status) ? '<i class="fa-solid fa-circle-exclamation" style="color:#ef4444; margin-left:4px; font-size:0.75rem;"></i>' : '');
+
+                                    html += `<div onclick="app.openModal(${p.id})"><img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${p.team_code}-66.png" class="t-kit"><div class="t-name">${p.name}${warn}</div><div class="t-meta">£${p.price}m${pc}</div><div class="t-net ${netClass}"><i class="fa-solid fa-users" style="font-size:0.55rem; margin-right:2px; opacity:0.8;"></i>${net >= 0 ? '+' : ''}${netStr}</div>${dots}</div>`;
+                                });
+                                html += `</div><div class="t-half t-in"><span class="t-label lbl-in">BUY</span>`;
+                                s.in.forEach(p => {
+                                    const fixtures = app.fixMap[p.team_id] || [];
+                                    let dots = '<div class="t-fdr">';
+                                    fixtures.slice(1, 4).forEach(f => { if(f) dots += `<div class="t-dot bg-${f.diff}">${f.opp}</div>` });
+                                    dots += '</div>';
+                                    const pc = p.cost_change > 0 ? '<span class="pc-arrow pc-up">▲</span>' : (p.cost_change < 0 ? '<span class="pc-arrow pc-down">▼</span>' : '');
+
+                                    const net = (p.transfers_in || 0) - (p.transfers_out || 0);
+                                    const netClass = net >= 0 ? 't-net-pos' : 't-net-neg';
+                                    const netStr = (Math.abs(net) > 999) ? (net/1000).toFixed(1) + 'k' : net;
+                                    
+                                    const warn = p.status === 'd' ? '<i class="fa-solid fa-triangle-exclamation" style="color:#fbbf24; margin-left:4px; font-size:0.75rem;"></i>' : (['i','s','n'].includes(p.status) ? '<i class="fa-solid fa-circle-exclamation" style="color:#ef4444; margin-left:4px; font-size:0.75rem;"></i>' : '');
+
+                                    html += `<div onclick="app.openModal(${p.id})"><img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${p.team_code}-66.png" class="t-kit"><div class="t-name">${p.name}${warn}</div><div class="t-meta">£${p.price}m${pc}</div><div class="t-net ${netClass}"><i class="fa-solid fa-users" style="font-size:0.55rem; margin-right:2px; opacity:0.8;"></i>${net >= 0 ? '+' : ''}${netStr}</div>${dots}</div>`;
+                                });
+                                html += `</div></div><div style="padding:0 15px 15px 15px;"><button class="preview-btn" onclick='app.simulate(${outIds}, ${inIds})'><i class="fa-solid fa-eye"></i> Preview Team</button></div></div>`;
+                            });
+                        } else {
+                            html += `<div class="welcome-card"><p>Team is optimal. Save your transfer.</p></div>`;
+                        }
+
+                        html += `<div style="font-size:1.1rem; font-weight:800; margin:30px 0 15px 0; padding-left:5px;">Market Trends</div><div class="trend-scroll">`;
+                        market.movers.forEach(p => {
+                            // Add Fixture Dots (Next 3 Games)
+                            const fixtures = app.fixMap[p.team_id] || [];
+                            let dots = '<div class="t-fdr" style="justify-content:center; margin-top:6px;">';
+                            fixtures.slice(1,4).forEach(f => { if(f) dots+=`<div class="t-dot bg-${f.diff}">${f.opp}</div>` });
+                            dots += '</div>';
+
+                            html += `<div class="trend-card" onclick="app.openModal(${p.id})"><img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${p.team_code}-66.png" class="trend-img"><div class="trend-name">${p.name}</div><div class="trend-team">${p.team}</div><div class="trend-stat"><i class="fa-solid fa-arrow-trend-up"></i> Hot</div>${dots}</div>`;
+                        });
+                        html += `</div><div style="height:40px;"></div>`;
+                        
+                        app.suggestionCache = { sig, html };
+                        container.innerHTML = html;
+                    } catch (err) {
+                        console.error("Transfer Error", err);
+                        container.innerHTML = `<div class="welcome-card" style="color:#ef4444;"><p>Analysis unavailable. Check connection.</p><button class="btn" style="margin-top:10px" onclick="app.load()">Reload Data</button></div>`;
+                    }
+                }, 100); 
+            }
+        },
+
+        filterByTeam: (teamName) => {
+            document.querySelector('.search-input').value = teamName;
+            app.searchScout(teamName);
+            document.querySelector('.search-container').scrollIntoView({ behavior: 'smooth' });
+        },
+
+        // --- NEW: Filter Players by Position ---
+        // --- NEW: Filter Players by Position (With Toggle Logic) ---
+        filterPos: (posId, btnElement) => {
+            // 1. TOGGLE OFF: If clicking the active button again, reset to main view
+            if (btnElement.classList.contains('active')) {
+                btnElement.classList.remove('active');
+                document.getElementById('scoutResults').style.display = 'none';
+                document.getElementById('transferContent').style.display = 'block';
+                return;
+            }
+
+            // 2. TOGGLE ON: Activate button and show list
+            document.querySelectorAll('.filter-pill').forEach(el => el.classList.remove('active'));
+            btnElement.classList.add('active');
+
+            document.getElementById('transferContent').style.display = 'none';
+            const res = document.getElementById('scoutResults');
+            res.style.display = 'block';
+
+            // 3. Filter & Sort Data (By Form)
+            const players = Object.values(app.playersCache);
+            // Relaxed Filter: Allow Available ('a') AND Doubtful ('d')
+            const matches = players.filter(p => p.pos == posId && (p.status === 'a' || p.status === 'd'));
+            matches.sort((a,b) => parseFloat(b.form) - parseFloat(a.form)); 
+            const top20 = matches.slice(0, 20);
+
+            // 4. Render List
+            let html = '';
+            if (top20.length === 0) {
+                html = '<div style="text-align:center; padding:20px; color:#888">No players found.</div>';
+            } else {
+                top20.forEach(p => {
+                    const fixtures = app.fixMap[p.team_id] || [];
+                    let dots = '<div class="t-fdr" style="margin-top:4px;">';
+                    // Shift to 1,4 to show next upcoming games
+                    fixtures.slice(1,4).forEach(f => { if(f) dots+=`<div class="t-dot bg-${f.diff}">${f.opp}</div>` });
+                    dots += '</div>';
+                    
+                    const warn = p.status === 'd' ? '<i class="fa-solid fa-triangle-exclamation" style="color:#fbbf24; margin-left:4px; font-size:0.75rem;"></i>' : '';
+                    
+                    // Ownership: Purple for Diff (<10%), Red for Template (>40%)
+                    const s = parseFloat(p.sel);
+                    const sStyle = s < 10 ? 'color:#8b5cf6; font-weight:800;' : (s > 40 ? 'color:#ef4444; font-weight:800;' : 'color:#6b7280;');
+
+                    html += `
+                        <div class="scout-item" onclick="app.openModal(${p.id})">
+                            <div class="scout-left">
+                                <img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${p.team_code}${p.pos === 1 ? '_1' : ''}-66.png" style="width:36px; height:45px; object-fit:contain;">
+                                <div class="scout-info">
+                                    <div>${p.name}${warn}</div>
+                                    <div style="font-size:0.75rem; color:#6b7280;">${p.team} • <span style="${sStyle}">${p.sel}% TSB</span></div>
+                                </div>
+                            </div>
+                            <div class="scout-right">
+                                <div class="scout-price">£${p.price}m</div>
+                                ${dots}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            res.innerHTML = html;
+        },
+        
+        searchScout: (query) => {
+            clearTimeout(app.searchTimer);
+            app.searchTimer = setTimeout(() => app.performSearch(query), 300);
+        },
+
+        performSearch: (query) => {
+            const resultsContainer = document.getElementById('scoutResults');
+            const mainContent = document.getElementById('transferContent');
+            if (!query || query.length < 2) {
+                resultsContainer.style.display = 'none';
+                mainContent.style.display = 'block';
+                return;
+            }
+            mainContent.style.display = 'none';
+            resultsContainer.style.display = 'block';
+            
+            const q = query.toLowerCase();
+            const players = Object.values(app.playersCache);
+            const matches = players.filter(p => p.name.toLowerCase().includes(q) || (p.team && p.team.toLowerCase().includes(q)));
+
+            // Fix: Sort by Form first, but fallback to Ownership (sel) if form is low/zero
+            // This ensures returning stars (like Palmer/Saka) appear even if Form is 0.0
+            matches.sort((a,b) => {
+                const fA = parseFloat(a.form);
+                const fB = parseFloat(b.form);
+                if (Math.abs(fA - fB) > 0.5) return fB - fA; // Use Form if difference is significant
+                return parseFloat(b.sel) - parseFloat(a.sel); // Otherwise use Ownership
+            });
+            const top20 = matches.slice(0, 20);
+            
+            let html = '';
+            if (top20.length === 0) {
+                html = '<div style="text-align:center; color:#888; padding:20px;">No players found.</div>';
+            } else {
+                top20.forEach(p => {
+                    const fixtures = app.fixMap[p.team_id] || [];
+                    let dots = '<div class="t-fdr" style="margin-top:4px;">';
+                    // Shift to 1,4 to show next upcoming games
+                    fixtures.slice(1,4).forEach(f => { if(f) dots+=`<div class="t-dot bg-${f.diff}">${f.opp}</div>` });
+                    dots += '</div>';
+                    
+                    const s = parseFloat(p.sel);
+                    const sStyle = s < 10 ? 'color:#8b5cf6; font-weight:800;' : (s > 40 ? 'color:#ef4444; font-weight:800;' : 'color:#6b7280;');
+
+                    html += `<div class="scout-item" onclick="app.openModal(${p.id})"><div class="scout-left"><img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${p.team_code}${p.pos === 1 ? '_1' : ''}-66.png" style="width:36px; height:45px; object-fit:contain;"><div class="scout-info"><div>${p.name}</div><div style="font-size:0.75rem; color:#6b7280;">${p.team} • <span style="${sStyle}">${p.sel}% TSB</span></div></div></div><div class="scout-right"><div class="scout-price">£${p.price}m</div>${dots}</div></div>`;
+                });
+            }
+            resultsContainer.innerHTML = html;
+        },
+        
+        renderPlanner: () => {
+            const container = document.getElementById('plannerGrid');
+            const currentGW = parseInt(app.gwName.replace(/\D/g,'')) || 1;
+            
+            // AI Recommendation
+            const rec = TransferBot.recommendChips(app.currentPicks, app.fixMap, currentGW, app.historyData);
+            let aiHtml = '';
+            if (rec) {
+                aiHtml = `
+                <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:15px; border-radius:12px; margin-bottom:20px; display:flex; gap:12px; align-items:start;">
+                    <div style="font-size:1.5rem; color:#166534;"><i class="fa-solid fa-robot"></i></div>
+                    <div>
+                        <div style="font-weight:800; color:#166534; font-size:0.9rem; margin-bottom:2px;">AI Strategy Found</div>
+                        <div style="color:#14532d; font-size:0.85rem; line-height:1.4;">
+                            Use <strong>${rec.chip}</strong> in <strong>GW${rec.gw}</strong>.<br>
+                            <span style="font-size:0.75rem; opacity:0.8;">Reason: ${rec.reason}</span>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            let html = aiHtml;
+            for (let i = 0; i < 5; i++) {
+                const gw = currentGW + i;
+                
+                // 1. Calculate Team Difficulty & Dynamic Captain (Best Fixture)
+                let totalDiff = 0, capDiff = 6, capOpp = '-';
+
+                app.currentPicks.forEach(p => {
+                    const f = (app.fixMap[p.element] || [])[i] || { diff: 3, opp: '-' };
+                    if (p.position <= 11) {
+                        totalDiff += f.diff;
+                        // Smart Captain: Starter (Not GK) with Easiest Game
+                        if (p.position > 1 && f.diff < capDiff) {
+                            capDiff = f.diff;
+                            capOpp = f.opp;
+                        }
+                    }
+                });
+
+                const avgDiff = totalDiff / 11;
+                // Bar Visuals: Green (<3) to Red (>4)
+                const barWidth = Math.max(10, Math.min(100, (5.5 - avgDiff) * 35)); 
+                const barColor = avgDiff < 3.0 ? '#00ff85' : (avgDiff > 3.8 ? '#ef4444' : '#fbbf24');
+
+                // 2. Bench Dots
+                let benchHtml = '';
+                app.currentPicks.filter(p => p.position > 11).forEach(p => {
+                     const f = (app.fixMap[p.element] || [])[i] || { diff: 3 };
+                     const bColor = f.diff < 3 ? '#00ff85' : (f.diff > 3 ? '#ef4444' : '#d1d5db');
+                     benchHtml += `<div style="width:5px; height:5px; border-radius:50%; background:${bColor};"></div>`;
+                });
+
+                html += `
+                    <div class="plan-row" style="gap:10px;">
+                        <div class="plan-col-gw" style="display:flex; flex-direction:column; justify-content:center; width:45px;">
+                            <div>GW${gw}</div>
+                            <div style="font-size:0.55rem; color:#888;">Avg ${avgDiff.toFixed(1)}</div>
+                        </div>
+                        
+                        <div style="flex:1;">
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
+                                <div style="font-size:0.6rem; font-weight:700; color:#9ca3af; width:20px;">XI</div>
+                                <div style="flex:1; background:#f3f4f6; height:6px; border-radius:4px; overflow:hidden;">
+                                    <div style="height:100%; width:${barWidth}%; background:${barColor}; border-radius:4px;"></div>
+                                </div>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <div style="font-size:0.6rem; font-weight:700; color:#9ca3af; width:20px;">SUB</div>
+                                <div style="display:flex; gap:2px;">${benchHtml}</div>
+                                <div style="margin-left:auto; font-size:0.65rem; background:#f3f4f6; padding:1px 4px; border-radius:4px; border:1px solid #e5e7eb; display:flex; align-items:center; gap:4px;">
+                                    <span style="color:#6b7280; font-weight:700;">C</span>
+                                    <span class="bg-${capDiff}" style="padding:0 4px; border-radius:2px; font-weight:800;">${capOpp}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="plan-col-chip" style="margin-left:0;">
+                            <select class="plan-select">
+                                <option value="">Save</option>
+                                <option value="wc" ${rec && rec.gw === gw && rec.chip === 'Wildcard' ? 'selected' : ''}>Wildcard</option>
+                                <option value="fh">Free Hit</option>
+                                <option value="bb" ${rec && rec.gw === gw && rec.chip === 'Bench Boost' ? 'selected' : ''}>Bench Boost</option>
+                                <option value="tc" ${rec && rec.gw === gw && rec.chip === 'Triple Captain' ? 'selected' : ''}>Triple Capt</option>
+                            </select>
+                        </div>
+                    </div>`;
+            }
+            container.innerHTML = html;
+        },
+
+        toggleView: (mode) => {
+            if (app.viewMode === mode) return;
+            const loader = document.getElementById('viewLoader');
+            loader.classList.add('active');
+            
+            document.querySelectorAll('.vt-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-${mode}`).classList.add('active');
+
+            setTimeout(() => {
+                app.viewMode = mode;
+                
+                let renderPicks = app.currentPicks;
+                if (mode === 'next') {
+                    // Auto-Optimize Lineup for Next GW View
+                    const opt = TransferBot.recommendFormation(app.currentPicks, app.playersCache, app.fixMap);
+                    renderPicks = [];
+                    // 1. Starters
+                    opt.bestLineup.forEach((id, i) => {
+                        const p = app.currentPicks.find(x => x.element === id);
+                        if (p) renderPicks.push({ ...p, position: i + 1 });
+                    });
+                    // 2. Bench
+                    opt.bench.forEach((player, i) => {
+                        const p = app.currentPicks.find(x => x.element === player.id);
+                        if (p) renderPicks.push({ ...p, position: 12 + i });
+                    });
+
+                    // 3. Auto-Captain (Best Next Fixture)
+                    let bestCap = null, maxScore = -99;
+                    renderPicks.forEach(p => {
+                        p.is_captain = false; p.is_vice_captain = false; p.multiplier = 1;
+                        if (p.position <= 11) {
+                            const pl = app.playersCache[p.element];
+                            const f = (app.fixMap[pl.team_id] || [])[1] || { diff: 3 };
+                            const score = (parseFloat(pl.form||0) * 0.5) + ((6 - f.diff) * 2.0);
+                            if (score > maxScore) { maxScore = score; bestCap = p; }
+                        }
+                    });
+                    if (bestCap) { bestCap.is_captain = true; bestCap.multiplier = 2; }
+                }
+
+                app.render(app.userData, renderPicks, app.playersCache, app.fixMap, app.statusMap, app.currentStats, app.historyData, app.deadline, app.gwName);
+                setTimeout(() => { loader.classList.remove('active'); }, 50);
+            }, 300);
+        },
+
+        simulate: (outIds, inIds) => {
+            const simPicks = JSON.parse(JSON.stringify(app.currentPicks));
+            let simBank = app.currentBank;
+            outIds.forEach((outId, idx) => {
+                const inId = inIds[idx];
+                const pickIdx = simPicks.findIndex(p => p.element === outId);
+                if (pickIdx !== -1) {
+                    simPicks[pickIdx].element = inId;
+                    const pOut = app.playersCache[outId];
+                    const pIn = app.playersCache[inId];
+                    
+                    // FIX: Use Real Selling Price (Pre-calculated in app.load)
+                    const realSellPrice = (simPicks[pickIdx].selling_price) ? simPicks[pickIdx].selling_price / 10 : pOut.price;
+                    simBank = simBank + realSellPrice - pIn.price;
+
+                    simPicks[pickIdx].multiplier = 1; 
+                    simPicks[pickIdx].is_captain = false;
+                    simPicks[pickIdx].is_vice_captain = false;
+                }
+            });
+            // --- AUTO OPTIMIZE FORMATION ---
+            const opt = TransferBot.recommendFormation(simPicks, app.playersCache, app.fixMap);
+            const finalPicks = [];
+            // 1. Add Starters (Indices 0-10)
+            opt.bestLineup.forEach((id, i) => {
+                const p = simPicks.find(x => x.element === id);
+                p.position = i + 1;
+                finalPicks.push(p);
+            });
+            // 2. Add Bench (Indices 11-14)
+            opt.bench.forEach((player, i) => {
+                const p = simPicks.find(x => x.element === player.id);
+                p.position = 12 + i;
+                finalPicks.push(p);
+            });
+
+            app.currentTool = 'squad';
+            app.isSimulating = true;
+            app.simNewIds = inIds;
+            
+            // Force Next GW View
+            app.viewMode = 'next';
+            document.querySelectorAll('.vt-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-next').classList.add('active');
+
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('nav-squad').classList.add('active');
+            const simStats = { ...app.currentStats, bank: simBank * 10, value: app.currentStats.value };
+            app.render(app.userData, finalPicks, app.playersCache, app.fixMap, app.statusMap || {}, simStats, app.historyData, app.deadline, app.gwName);
+            
+            // Calculate XP Gain (Optimized vs Optimized)
+            const calcXP = (pList) => {
+                const o = TransferBot.recommendFormation(pList, app.playersCache, app.fixMap);
+                let t = 0, m = 0;
+                o.bestLineup.forEach(id => {
+                    const pl = app.playersCache[id];
+                    const f = (app.fixMap[pl.team_id]||[])[1] || {diff:3};
+                    const pts = (parseFloat(pl.form||0)*0.5) + (6-f.diff);
+                    t += pts; m = Math.max(m, pts);
+                });
+                return t + m;
+            };
+            const gain = (calcXP(simPicks) - calcXP(app.currentPicks)).toFixed(1);
+            const gainHtml = gain > 0 ? `<span style="font-size:0.75rem; background:rgba(255,255,255,0.25); padding:3px 8px; border-radius:6px; margin-left:10px; font-weight:800;">+${gain} xP</span>` : '';
+
+            // Redirect Reset to Transfers
+            const bannerHtml = `<div class="sim-banner"><div><i class="fa-solid fa-wand-magic-sparkles"></i> Preview ${gainHtml}</div><div class="sim-btn" onclick="app.switchTool('transfers', true)">Reset</div></div>`;
+            const dash = document.getElementById('dashboardView');
+            const existingBanner = dash.querySelector('.sim-banner');
+            if (existingBanner) existingBanner.remove();
+            dash.insertAdjacentHTML('afterbegin', bannerHtml);
+        },
+
+        load: async (savedId = null) => {
+            const id = savedId || document.getElementById('teamID').value;
+            if (!id) return alert("Enter ID");
+            localStorage.setItem('fpl_id_final', id);
+            app.suggestionCache = null; // Clear cache on reload
+            document.getElementById('userIcon').classList.add('active');
+            app.show('loadingView');
+
+            try {
+                document.getElementById('loadingMsg').innerText = "Connecting...";
+                
+                // Parallel Fetch 1: Core Data (Static, User, History) - Added Timestamp to bust cache
+                const t = Date.now();
+                const [staticData, user, history] = await Promise.all([
+                    app.fetchUrl(`https://fantasy.premierleague.com/api/bootstrap-static/?t=${t}`),
+                    app.fetchUrl(`https://fantasy.premierleague.com/api/entry/${id}/?t=${t}`),
+                    app.fetchUrl(`https://fantasy.premierleague.com/api/entry/${id}/history/?t=${t}`)
+                ]);
+
+                app.userData = user;
+                app.historyData = history;
+
+                const gwEvent = staticData.events.find(e => e.is_current) || staticData.events[0];
+                const gw = gwEvent.id;
+                
+                const nextEvent = staticData.events.find(e => e.is_next);
+                app.deadline = nextEvent ? nextEvent.deadline_time : null;
+                app.gwName = nextEvent ? nextEvent.name : 'GW-';
+
+                document.getElementById('loadingMsg').innerText = "Fetching Live Scores...";
+                
+                // Parallel Fetch 2: GW Dependent Data (+ TRANSFERS for Budget Calc)
+                const [picks, liveData, fix1, fix2, fix3, fix4, transfers] = await Promise.all([
+                    app.fetchUrl(`https://fantasy.premierleague.com/api/entry/${id}/event/${gw}/picks/`),
+                    app.fetchUrl(`https://fantasy.premierleague.com/api/event/${gw}/live/`),
+                    app.fetchUrl(`https://fantasy.premierleague.com/api/fixtures/?event=${gw}`),
+                    app.fetchUrl(`https://fantasy.premierleague.com/api/fixtures/?event=${gw+1}`),
+                    app.fetchUrl(`https://fantasy.premierleague.com/api/fixtures/?event=${gw+2}`),
+                    app.fetchUrl(`https://fantasy.premierleague.com/api/fixtures/?event=${gw+3}`),
+                    app.fetchUrl(`https://fantasy.premierleague.com/api/entry/${id}/transfers/`)
+                ]);
+
+                app.currentStats = picks.entry_history;
+                
+                const liveMap = {};
+                app.lastEvents = {};
+                liveData.elements.forEach(el => {
+                    liveMap[el.id] = { points: el.stats.total_points, mins: el.stats.minutes, goals: el.stats.goals_scored, assists: el.stats.assists, red_cards: el.stats.red_cards, own_goals: el.stats.own_goals, yellow_cards: el.stats.yellow_cards, goals_conceded: el.stats.goals_conceded };
+                    app.lastEvents[el.id] = { goals: el.stats.goals_scored, assists: el.stats.assists, red_cards: el.stats.red_cards, yellow_cards: el.stats.yellow_cards, goals_conceded: el.stats.goals_conceded };
+                });
+                
+                const teamShort = {};
+                staticData.teams.forEach(t => teamShort[t.id] = t.short_name);
+                app.teams = teamShort;
+
+                // --- MATCH STATUS MAP ---
+                const statusMap = {};
+                if (fix1) {
+                    fix1.forEach(f => {
+                        let status = 'FIX';
+                        let label = new Date(f.kickoff_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        if (f.finished || f.finished_provisional) { 
+                            status = 'FT'; 
+                            label = 'FT'; 
+                        } else if (f.started) { 
+                            status = 'LIVE'; 
+                            label = 'LIVE'; 
+                        }
+                        const score = (f.started || f.finished || f.finished_provisional) ? { h: f.team_h_score, a: f.team_a_score } : null;
+                        statusMap[f.team_h] = { status, label, id: f.id, score };
+                        statusMap[f.team_a] = { status, label, id: f.id, score };
+                    });
+                }
+                app.statusMap = statusMap;
+
+                const processFix = (fixList) => {
+                    const map = {};
+                    if (!fixList) return map;
+                    fixList.forEach(f => {
+                        if (!map[f.team_h]) map[f.team_h] = [];
+                        if (!map[f.team_a]) map[f.team_a] = [];
+                        map[f.team_h].push({ opp: teamShort[f.team_a], diff: f.team_h_difficulty, is_home: true });
+                        map[f.team_a].push({ opp: teamShort[f.team_h], diff: f.team_a_difficulty, is_home: false });
+                    });
+                    return map;
+                };
+                const map1 = processFix(fix1); const map2 = processFix(fix2); const map3 = processFix(fix3); const map4 = processFix(fix4);
+                const masterFixMap = {};
+                staticData.teams.forEach(t => {
+                    const f1 = (map1[t.id] || [])[0] || { opp: '-', diff: 3 };
+                    const f2 = (map2[t.id] || [])[0] || { opp: '-', diff: 3 };
+                    const f3 = (map3[t.id] || [])[0] || { opp: '-', diff: 3 };
+                    const f4 = (map4[t.id] || [])[0] || { opp: '-', diff: 3 };
+                    masterFixMap[t.id] = [f1, f2, f3, f4];
+                });
+                app.fixMap = masterFixMap;
+
+                const players = {};
+                staticData.elements.forEach(p => {
+                    const live = liveMap[p.id];
+                    players[p.id] = {
+                        id: p.id, name: p.web_name, team: teamShort[p.team], team_id: p.team,
+                        pos: p.element_type, price: p.now_cost / 10,
+                        now_cost: p.now_cost, // Store raw integer for precision math
+                        event_points: live ? live.points : p.event_points,
+                        minutes: live ? live.mins : 0,
+                        stats: live || { goals: 0, assists: 0, red_cards: 0 },
+                        team_code: p.team_code, status: p.status, chance: p.chance_of_playing_next_round, news: p.news, cost_change: p.cost_change_event,
+        // Track total price rise for budget calculation
+        cost_change_start: p.cost_change_start,
+        sel: parseFloat(p.selected_by_percent), form: p.form, transfers_in: p.transfers_in_event, transfers_out: p.transfers_out_event, total_points: p.total_points, ict_index: p.ict_index
+    };
+});
+
+                app.playersCache = players;
+
+                // --- LIVE BONUS PROJECTION LOGIC (INITIAL LOAD) ---
+                const matchGroups = {};
+                liveData.elements.forEach(el => {
+                    const teamId = app.playersCache[el.id]?.team_id;
+                    const fid = app.statusMap[teamId]?.id || 0;
+                    if (fid) {
+                        if (!matchGroups[fid]) matchGroups[fid] = [];
+                        matchGroups[fid].push({ id: el.id, bps: el.stats.bps, bonus: el.stats.bonus });
+                    }
+                });
+
+                app.bonusMap = {};
+                Object.values(matchGroups).forEach(players => {
+                    players.sort((a, b) => b.bps - a.bps);
+                    if (players.length > 0 && players[0].bonus === 0) app.bonusMap[players[0].id] = 3;
+
+                    if (players.length > 1) {
+                        const b2 = (players[1].bps === players[0].bps) ? 3 : 2;
+                        if (players[1].bonus === 0) app.bonusMap[players[1].id] = b2;
+
+                        if (players.length > 2 && players[2].bonus === 0) {
+                            if (players[2].bps === players[1].bps) app.bonusMap[players[2].id] = b2;
+                            else app.bonusMap[players[2].id] = 1;
+                        }
+                    }
+                });
+
+                // FIX: SMART BUDGET CALCULATION
+                // 1. If player exists in transfer history -> Use that price (Exact)
+                // 2. If player is from Initial Squad (GW1) -> Use Cost Change Math (Fixes Stale Data)
+                // 3. If Late Joiner & No History -> Fallback to API (Safe)
+                const startGw = user.started_event || 1;
+
+                app.currentPicks = picks.picks.map(pick => {
+                    const p = players[pick.element];
+                    
+                    // Step A: Try to find confirmed purchase in History
+                    let pp = pick.purchase_price ?? null;
+if (transfers && transfers.length > 0) {
+    const history = transfers
+        .filter(t => t.element_in === pick.element)
+        .sort((a,b) => new Date(b.time) - new Date(a.time));
+    if (history.length > 0 && typeof history[0].element_in_cost === 'number') {
+        pp = history[0].element_in_cost;
+    }
+}
+
+                    // Step B: If no history found, assume bought at Season Start (Conservative Fallback)
+                    // This ensures we don't overestimate budget. Better to have "hidden funds" than "insufficient funds".
+                    if (pp === null) {
+                        pp = p.now_cost - p.cost_change_start;
+                    }
+
+                    // Step C: Calculate Fresh Selling Price
+                    let finalSellingPrice = pick.selling_price; // Default to API
+                    
+                    if (pp !== null) {
+                        // We have a confirmed purchase price, so we can fix stale API data
+                        if (p.now_cost > pp) {
+                            const profit = p.now_cost - pp;
+                            const gain = Math.floor(profit / 2); // Round Down (FPL Rule)
+                            finalSellingPrice = pp + gain;
+                        } else {
+                            finalSellingPrice = p.now_cost; // Loss or Break-even
+                        }
+                    }
+
+                    return { ...pick, purchase_price: pp, selling_price: finalSellingPrice };
+                });
+                
+                app.currentBank = picks.entry_history.bank / 10;
+                document.getElementById('demoAlert').classList.add('hidden');
+                
+                if (app.liveInterval) clearInterval(app.liveInterval);
+                app.liveInterval = setInterval(() => app.checkLiveEvents(gw), 60000);
+
+                app.render(user, picks.picks, players, masterFixMap, app.statusMap, picks.entry_history, history, app.deadline, app.gwName);
+
+            } catch (error) {
+                console.error("Data Fetch Failed:", error);
+                document.getElementById('demoAlert').classList.remove('hidden');
+                const mPlayers = {};
+                Object.keys(MOCK_DATA.players).forEach(k => mPlayers[k] = { ...MOCK_DATA.players[k], id: k, team: 'MOCK' });
+                app.playersCache = mPlayers;
+                setTimeout(() => { 
+                    app.render(MOCK_DATA.user, MOCK_DATA.picks, mPlayers, {}, {}, { bank: 5, value: 1000 }, { chips: [] }, new Date().toISOString(), "GW Demo"); 
+                }, 500);
+            }
+        },
+        
+        checkLiveEvents: async (gw) => {
+            try {
+                // Fetch both Live Stats AND Fixtures (for Match Clock)
+                const [liveData, fixData] = await Promise.all([
+                    app.fetchUrl(`https://fantasy.premierleague.com/api/event/${gw}/live/?t=${Date.now()}`),
+                    app.fetchUrl(`https://fantasy.premierleague.com/api/fixtures/?event=${gw}&t=${Date.now()}`)
+                ]);
+
+                // 1. Update Match Status (Time, HT, FT)
+                if (fixData) {
+                    fixData.forEach(f => {
+                        let status = 'FIX';
+                        let label = new Date(f.kickoff_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        
+                        if (f.finished_provisional || f.finished) { 
+                            status = 'FT'; label = 'FT'; 
+                        } else if (f.started) { 
+                            status = 'LIVE'; 
+                            // Check for Half Time (approx logic) or regular minutes
+                            if (f.minutes === 45 && !f.finished_provisional && Date.now() - new Date(f.kickoff_time).getTime() > 60*60*1000) label = "HT";
+                            else label = f.minutes + "'";
+                        }
+                        
+                        const score = (f.started || f.finished || f.finished_provisional) ? { h: f.team_h_score, a: f.team_a_score } : null;
+                        // Update the global map so pills can read it
+                        if (app.statusMap[f.team_h]) { Object.assign(app.statusMap[f.team_h], { status, label, score }); }
+                        if (app.statusMap[f.team_a]) { Object.assign(app.statusMap[f.team_a], { status, label, score }); }
+                    });
+                }
+
+                // 2. Update Player Stats
+                liveData.elements.forEach(el => {
+                    const pid = el.id;
+                    const p = app.playersCache[pid];
+                    if (!p) return;
+                    
+                    const newStats = { goals: el.stats.goals_scored, assists: el.stats.assists, red_cards: el.stats.red_cards, yellow_cards: el.stats.yellow_cards, goals_conceded: el.stats.goals_conceded };
+                    const old = app.lastEvents[pid] || newStats;
+                    
+                    // Update Cache
+                    p.event_points = el.stats.total_points;
+                    p.minutes = el.stats.minutes;
+                    p.stats = { ...p.stats, ...newStats, own_goals: el.stats.own_goals };
+
+                    // Notify Squad
+                    const inSquad = app.currentPicks.some(x => x.element === pid);
+                    if (inSquad) {
+                        const icon = `https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${p.team_code}-66.png`;
+                        if (newStats.goals > old.goals) new Notification(`⚽ GOAL! ${p.name}`, { body: `${p.team} • Total: ${el.stats.total_points}pts`, icon });
+                        if (newStats.assists > old.assists) new Notification(`🅰️ ASSIST! ${p.name}`, { body: `${p.team} • Total: ${el.stats.total_points}pts`, icon });
+                        if (newStats.red_cards > old.red_cards) new Notification(`🟥 RED CARD! ${p.name}`, { body: `Sent off for ${p.team}`, icon });
+                        if (newStats.yellow_cards > old.yellow_cards) new Notification(`🟨 Yellow Card! ${p.name}`, { body: `${p.team}`, icon });
+                    }
+                    app.lastEvents[pid] = newStats;
+                });
+
+                // --- LIVE BONUS PROJECTION LOGIC ---
+                const matchGroups = {};
+                liveData.elements.forEach(el => {
+                    const fixtureId = app.playersCache[el.id]?.statusMapId || 0; // Use fixture ID from statusMap if available
+                    // Fallback: Group by team if fixture ID isn't directly on player
+                    const teamId = app.playersCache[el.id]?.team_id;
+                    const fid = app.statusMap[teamId]?.id || 0;
+                    if (fid) {
+                        if (!matchGroups[fid]) matchGroups[fid] = [];
+                        matchGroups[fid].push({ id: el.id, bps: el.stats.bps, bonus: el.stats.bonus });
+                    }
+                });
+                app.bonusMap = {};
+                Object.values(matchGroups).forEach(pList => {
+                    pList.sort((a, b) => b.bps - a.bps);
+                    // Only apply projection if confirmed bonus is 0
+                    if (pList.length > 0 && pList[0].bonus === 0) app.bonusMap[pList[0].id] = 3;
+                    
+                    if (pList.length > 1) {
+                        const b2 = (pList[1].bps === pList[0].bps) ? 3 : 2;
+                        if (pList[1].bonus === 0) app.bonusMap[pList[1].id] = b2;
+                        
+                        if (pList.length > 2 && pList[2].bonus === 0) {
+                            if (pList[2].bps === pList[1].bps) app.bonusMap[pList[2].id] = b2;
+                            else app.bonusMap[pList[2].id] = 1;
+                        }
+                    }
+                });
+
+                // Only re-render live data if the user is NOT in Preview/Simulation mode
+                if (app.currentTool === 'squad' && !app.isSimulating) app.render(app.userData, app.currentPicks, app.playersCache, app.fixMap, app.statusMap, app.currentStats, app.historyData, app.deadline, app.gwName);
+            } catch (e) {}
+        },
+
+        render: (user, picks, players, fixMap, statusMap, stats, history, deadline, gwName) => {
+            // 1. Calculate Auto-Subs & Score Projection
+            const subOutIds = [];
+            const subInIds = [];
+            const played = (p) => p && p.minutes > 0;
+            const didntPlay = (p) => {
+                if (!p || p.minutes > 0) return false;
+                const m = statusMap[p.team_id];
+                return (m && m.status === 'FT') || p.chance === 0;
+            };
+
+            // Calculate Subs (GK + Outfield)
+            const startGK = players[picks[0].element];
+            const subGK = players[picks[11].element];
+            if (didntPlay(startGK) && played(subGK)) { subOutIds.push(startGK.id); subInIds.push(subGK.id); }
+
+            // Fix: Track formation counts to ensure valid sub (Min 3 Def, Min 1 Fwd)
+            let defCount = 0, fwdCount = 0;
+            for (let i = 1; i <= 10; i++) {
+                const p = players[picks[i].element];
+                if (p.pos === 2) defCount++;
+                if (p.pos === 4) fwdCount++;
+            }
+
+            const outfieldBench = [12, 13, 14].map(i => players[picks[i].element]);
+            const usedBenchIds = new Set(); 
+
+            for (let i = 1; i <= 10; i++) {
+                const starter = players[picks[i].element];
+                if (didntPlay(starter)) {
+                    // Check validity constraints
+                    const needsDef = (starter.pos === 2 && defCount <= 3);
+                    const needsFwd = (starter.pos === 4 && fwdCount <= 1);
+
+                    for (const sub of outfieldBench) {
+                        if (played(sub) && !usedBenchIds.has(sub.id)) {
+                            // Skip if sub breaks formation rules
+                            if (needsDef && sub.pos !== 2) continue; 
+                            if (needsFwd && sub.pos !== 4) continue;
+
+                            subOutIds.push(starter.id); subInIds.push(sub.id);
+                            usedBenchIds.add(sub.id);
+                            
+                            // Update counts
+                            if (starter.pos === 2) defCount--;
+                            if (starter.pos === 4) fwdCount--;
+                            if (sub.pos === 2) defCount++;
+                            if (sub.pos === 4) fwdCount++;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Calculate Score with Subs & VC
+            let liveScore = 0, playedCount = 0;
+            const capPick = picks.find(p => p.is_captain);
+            // Fix: Check minutes directly (armband passes even if no sub possible)
+            const capDidntPlay = capPick && didntPlay(players[capPick.element]);
+
+            picks.forEach(pick => {
+                const p = players[pick.element];
+                if (!p) return;
+                const isStarter = pick.position <= 11;
+                const isSubIn = subInIds.includes(pick.element);
+                const isSubOut = subOutIds.includes(pick.element);
+                
+                if ((isStarter && !isSubOut) || isSubIn) {
+                    let mult = pick.multiplier;
+                    if (capDidntPlay) {
+                        if (pick.is_captain) mult = 1; // Cap didn't play
+                        if (pick.is_vice_captain) mult = capPick.multiplier; // VC becomes Cap (inherits TC)
+                    }
+
+                    const bonus = (app.viewMode === 'live' && app.bonusMap[pick.element]) ? app.bonusMap[pick.element] : 0;
+                    liveScore += ((p.event_points + bonus) * mult);
+                    if (p.minutes > 0) playedCount++;
+                }
+            });
+            const oldGwScore = user.summary_event_points || 0;
+            const totalDiff = liveScore - oldGwScore;
+            const liveTotal = (user.summary_overall_points || 0) + totalDiff;
+
+            document.getElementById('dispName').innerText = user.name;
+
+            if (app.viewMode === 'next') {
+                let xpTotal = 0, diffTotal = 0, count = 0;
+                picks.forEach(p => {
+                    if (p.position <= 11) {
+                        const pl = players[p.element];
+                        if (pl) {
+                            const f = (fixMap[pl.team_id]||[])[1] || {diff:3};
+                            // xP Formula: Form*0.5 + Ease*1.0
+                            let xP = (parseFloat(pl.form||0)*0.5) + ((6-f.diff)*1.0);
+                            xpTotal += (xP * (p.multiplier || 1));
+                            diffTotal += f.diff; count++;
+                        }
+                    }
+                });
+                document.getElementById('dispGW').previousElementSibling.innerText = "Projected Pts";
+                document.getElementById('dispGW').innerHTML = `${xpTotal.toFixed(1)} <div style="font-size:0.5rem; color:white; opacity:0.8; line-height:1;">xP</div>`;
+                document.getElementById('dispTotal').previousElementSibling.innerText = "Avg Difficulty";
+                document.getElementById('dispTotal').innerText = count ? (diffTotal/count).toFixed(1) : '0.0';
+            } else {
+                document.getElementById('dispGW').previousElementSibling.innerText = "GW Points";
+                document.getElementById('dispGW').innerHTML = `${liveScore} <div style="font-size:0.5rem; color:white; opacity:0.8; line-height:1;">${playedCount}/11</div>`;
+                document.getElementById('dispTotal').previousElementSibling.innerText = "Total Pts";
+                document.getElementById('dispTotal').innerText = liveTotal;
+            }
+
+            // --- HISTORY GRAPH (Last 5 GWs) ---
+            if (history.current && history.current.length > 0) {
+                const recents = history.current.slice(-5);
+                const maxPts = Math.max(...recents.map(r => r.points), 60); // Scale baseline
+                
+                let graphHtml = '';
+                recents.forEach((r, i) => {
+                    const prev = recents[i-1] || r;
+                    const isGreen = r.overall_rank < prev.overall_rank;
+                    const isRed = r.overall_rank > prev.overall_rank;
+                    const barClass = isGreen ? 'hb-green' : (isRed ? 'hb-red' : 'hb-gray');
+                    const hPct = Math.max(10, (r.points / maxPts) * 100);
+                    
+                    graphHtml += `<div class="hist-col">
+                        <div class="hist-val">${r.points}</div>
+                        <div class="hist-bar ${barClass}" style="height:${hPct}%;"></div>
+                        <div class="hist-gw">GW${r.event}</div>
+                    </div>`;
+                });
+                document.getElementById('historyGraph').innerHTML = graphHtml;
+            }
+
+            let rankArrow = '<i class="fa-solid fa-minus r-grey"></i>';
+            const currentRank = user.summary_overall_rank || 0;
+            
+            // Logic: If last history entry has same rank as current, fallback to previous entry to show movement
+            let lastRank = 0;
+            if (history.current && history.current.length > 0) {
+                const last = history.current[history.current.length - 1];
+                if (last.overall_rank === currentRank && history.current.length > 1) {
+                    lastRank = history.current[history.current.length - 2].overall_rank;
+                } else {
+                    lastRank = last.overall_rank;
+                }
+            }
+
+            let diffStr = '';
+            if (lastRank > 0 && currentRank > 0 && lastRank !== currentRank) {
+                const rawDiff = lastRank - currentRank; 
+                const abs = Math.abs(rawDiff);
+                const fmt = abs > 999999 ? (abs/1000000).toFixed(1)+'m' : (abs > 999 ? (abs/1000).toFixed(0)+'k' : abs);
+                
+                // Pill Logic: Up (Green) or Down (Red)
+                const pClass = rawDiff > 0 ? 'rp-up' : 'rp-down';
+                const pIcon = rawDiff > 0 ? '▲' : '▼';
+                diffStr = `<div class="rank-pill ${pClass}">${pIcon} ${fmt}</div>`;
+            }
+
+            // Clean Display: Value + Ticker Pill
+            document.getElementById('dispRank').innerHTML = `<div class="rank-wrap"><span>${currentRank.toLocaleString()}</span>${diffStr}</div>`;
+
+            document.getElementById('dispBank').innerText = `£${(stats.bank / 10).toFixed(1)}m`;
+            const valHtml = `£${(stats.value / 10).toFixed(1)}m` + (app.viewMode === 'next' ? ' <span style="background:#fbbf24; color:#78350f; font-size:0.6rem; padding:1px 6px; border-radius:4px; font-weight:800; vertical-align:2px;">AI LINEUP</span>' : '');
+            document.getElementById('dispValue').innerHTML = valHtml;
+
+            if (app.timer) clearInterval(app.timer);
+            const updateTime = () => {
+                const now = new Date().getTime();
+                const countDate = new Date(deadline).getTime();
+                const gap = countDate - now;
+                if (gap > 0) {
+                    const d = Math.floor(gap / (1000 * 60 * 60 * 24));
+                    const h = Math.floor((gap % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const m = Math.floor((gap % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((gap % (1000 * 60)) / 1000);
+
+                    // 24 Hour Reminder
+                    if (gap <= 86400000 && !app.dayNotified) {
+                        if (Notification.permission === "granted") new Notification(`📅 1 Day to Deadline`, { body: "Check injury news & price changes.", icon: "https://fantasy.premierleague.com/static/libs/theme-legacy/icons/touch-icon-192x192.png" });
+                        app.dayNotified = true;
+                    }
+
+                    // 1 Hour Deadline Warning
+                    if (gap <= 3600000 && !app.deadlineNotified) {
+                        if (Notification.permission === "granted") new Notification(`⚠️ FPL Deadline in 1 Hour!`, { body: "Finalize your team now." });
+                        app.deadlineNotified = true;
+                    }
+
+                    const isUrgent = d === 0 ? 'urgent' : '';
+                    document.getElementById('gwCountdown').innerHTML = `<div class="cd-label"><div class="status-dot ${isUrgent}"></div>${gwName}</div><div class="cd-time">${d}d : ${h.toString().padStart(2, '0')}h : ${m.toString().padStart(2, '0')}m : ${s.toString().padStart(2, '0')}s</div>`;
+                } else {
+                    document.getElementById('gwCountdown').innerHTML = `<div class="cd-label" style="border:none; padding:0; color:#ef4444;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px"></i> Deadline Passed</div>`;
+                    clearInterval(app.timer);
+                }
+            };
+            updateTime();
+            app.timer = setInterval(updateTime, 1000);
+
+            const usedChips = history.chips.map(c => c.name);
+            const chipMap = { 'wildcard': 'WC', 'freehit': 'FH', 'bboost': 'BB', '3xc': 'TC' };
+            const allChips = ['wildcard', 'freehit', 'bboost', '3xc'];
+            const chipHtml = allChips.map(c => {
+                const isUsed = usedChips.includes(c);
+                return `<div class="${isUsed ? 'chip-pill used' : 'chip-pill active'}">${chipMap[c]}</div>`;
+            }).join('');
+            document.getElementById('chipBar').innerHTML = chipHtml;
+
+            // CAPTAINCY INTEL (Context Aware: 0 for Live, 1 for Next GW)
+            const fIdx = app.viewMode === 'next' ? 1 : 0;
+            const capRec = TransferBot.analyzeCaptaincy(picks, players, fixMap, fIdx);
+            const capDiv = document.getElementById('capRecommendation');
+            if (capRec) {
+                const isSwitch = capRec.best.name !== capRec.cur.name && (capRec.best.score - capRec.cur.score) > 0.5;
+                const bg = isSwitch ? '#fffbeb' : '#f0fdf4';
+                const border = isSwitch ? '#fcd34d' : '#bbf7d0';
+                const iconColor = isSwitch ? '#d97706' : '#16a34a';
+                const titleColor = isSwitch ? '#b45309' : '#166534';
+                const title = isSwitch ? 'Captaincy Alert' : 'Captain Active';
+                const msg = isSwitch 
+                    ? `Switch <strong>${capRec.cur.name}</strong> <i class="fa-solid fa-arrow-right" style="font-size:0.7rem; margin:0 4px; opacity:0.6;"></i> <strong>${capRec.best.name}</strong>`
+                    : `Great choice! <strong>${capRec.cur.name}</strong> is the best option this week.`;
+                
+                const viceMsg = (capRec.vice && capRec.curVice && capRec.vice.name !== capRec.curVice.name)
+                     ? `<div style="font-size:0.75rem; margin-top:4px; color:#666; font-weight:500;">Vice: Switch <strong>${capRec.curVice.name}</strong> to <strong>${capRec.vice.name}</strong></div>`
+                     : (capRec.vice ? `<div style="font-size:0.75rem; margin-top:4px; color:#666; font-weight:500;">Vice: <strong>${capRec.vice.name}</strong> is optimal.</div>` : '');
+
+                capDiv.innerHTML = `<div style="background:${bg}; border:1px solid ${border}; padding:12px; border-radius:12px; margin-bottom:20px; display:flex; align-items:center; gap:12px; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
+                    <div style="font-size:1.8rem; color:${iconColor};"><i class="fa-solid fa-copyright"></i></div>
+                    <div>
+                        <div style="font-size:0.75rem; font-weight:700; color:${titleColor}; text-transform:uppercase; letter-spacing:0.5px;">${title}</div>
+                        <div style="font-size:0.9rem; font-weight:600; color:${isSwitch ? '#78350f' : '#14532d'};">${msg}</div>
+                        ${viceMsg}
+                    </div>
+                </div>`;
+            } else {
+                capDiv.innerHTML = '';
+            }
+
+            // (Sub logic moved to top)
+
+            const pitchDiv = document.getElementById('pitchRows');
+            const benchDiv = document.getElementById('benchRow');
+            pitchDiv.innerHTML = ''; benchDiv.innerHTML = '';
+            const formation = { 1: [], 2: [], 3: [], 4: [] };
+            for (let i = 0; i < 11; i++) {
+                const pick = picks[i];
+                const p = players[pick.element];
+                if (p) formation[p.pos].push({ ...p, is_captain: pick.is_captain, is_vice: pick.is_vice_captain, multiplier: pick.multiplier, subStatus: subOutIds.includes(p.id) ? 'out' : null });
+            }
+            [1, 2, 3, 4].forEach(posId => {
+                const row = document.createElement('div'); row.className = 'field-row';
+                formation[posId].forEach(p => row.innerHTML += app.createPill(p, fixMap, statusMap, false, 0, p.subStatus));
+                pitchDiv.appendChild(row);
+            });
+            for (let i = 11; i < picks.length; i++) {
+                const pick = picks[i];
+                const p = players[pick.element];
+                if (p) {
+                    const status = subInIds.includes(p.id) ? 'in' : null;
+                    benchDiv.innerHTML += app.createPill({ ...p, is_captain: false, is_vice: false, multiplier: pick.multiplier }, fixMap, statusMap, true, i - 10, status);
+                }
+            }
+            
+            if (app.currentTool === 'transfers' && !app.isSimulating) {
+                app.switchTool('transfers', true); // True = Suppress menu toggle
+            } else {
+                app.show('dashboardView');
+            }
+        },
+
+        createPill: (p, fixMap, statusMap, isBench = false, benchNum = 0, subStatus = null) => {
+            let capBadge = p.is_captain ? `<div class="captain-badge">C</div>` : (p.is_vice ? `<div class="captain-badge vice-badge">V</div>` : '');
+            // Status moved to Stack
+            let extraClass = subStatus === 'out' ? 'did-not-play' : (subStatus === 'in' ? 'coming-on' : '');
+            let subIcon = subStatus === 'in' ? `<div class="sub-icon"><i class="fa-solid fa-arrow-up"></i></div>` : '';
+            let newBadge = (app.isSimulating && app.simNewIds && app.simNewIds.includes(p.id)) ? `<div class="new-badge">NEW</div>` : '';
+            if (newBadge) extraClass += ' sim-new';
+            if (p.is_captain) extraClass += ' captain-card';
+
+            // --- CS SHIELD (Live Only, GK/DEF, >0 Mins, 0 Conceded) ---
+            let csShield = '';
+            if (app.viewMode === 'live' && !app.isSimulating && p.stats && p.pos <= 2 && p.minutes > 0 && p.stats.goals_conceded === 0) {
+                csShield = `<div class="cs-shield"><i class="fa-solid fa-shield-halved"></i></div>`;
+            }
+
+            // --- LIVE BADGE LOGIC ---
+            let matchBadge = '';
+            if (app.viewMode === 'live' && !app.isSimulating && statusMap && statusMap[p.team_id]) {
+                const m = statusMap[p.team_id];
+                let badgeClass = 'ms-fix';
+                let label = m.label;
+                
+                if (m.status === 'FT') { 
+                    badgeClass = 'ms-ft'; 
+                    if (m.score) label = `${m.score.h}-${m.score.a}`;
+                } 
+                else if (m.status === 'LIVE') { 
+                    badgeClass = 'ms-live'; 
+                    if (m.score) label = `${m.score.h}-${m.score.a}`;
+                }
+                matchBadge = `<div class="match-status ${badgeClass}">${label}</div>`;
+            }
+
+            let evtHtml = '';
+            if (app.viewMode === 'live' && p.stats) {
+                evtHtml += '<div class="event-row">';
+                // Goals (Football Icon)
+                for (let i = 0; i < p.stats.goals; i++) evtHtml += `<div class="evt-icon evt-goal"><i class="fa-solid fa-futbol"></i></div>`;
+                // Assists (Blue Arrow)
+                for (let i = 0; i < p.stats.assists; i++) evtHtml += `<div class="evt-icon evt-assist"><i class="fa-solid fa-share" style="transform: scaleX(-1);"></i></div>`;
+                // Cards (Rectangles)
+                if (p.stats.red_cards > 0) evtHtml += `<div class="evt-icon evt-card evt-red"></div>`;
+                if (p.stats.yellow_cards > 0) evtHtml += `<div class="evt-icon evt-card evt-yellow"></div>`;
+                // Own Goals
+                if (p.stats.own_goals > 0) evtHtml += `<div class="evt-icon evt-own"><i class="fa-solid fa-futbol"></i></div>`;
+                evtHtml += '</div>';
+            }
+
+            const fixtures = fixMap[p.team_id] || [{ diff: 3, opp: '-' }, { diff: 3, opp: '-' }, { diff: 3, opp: '-' }];
+            let dotsHtml = '<div class="fdr-row">';
+            // Refinement: Home = BOLD CAPS, Away = lighter lowercase
+            fixtures.slice(0, 3).forEach(f => { 
+                const opp = f.is_home ? f.opp : f.opp.toLowerCase();
+                const style = f.is_home ? '' : 'font-weight:500; opacity:0.9;';
+                dotsHtml += `<div class="fdr-dot bg-${f.diff}" style="${style}">${opp}</div>`; 
+            });
+            dotsHtml += '</div>';
+
+            // Hide FDR dots in Live Mode to reduce clutter
+            if (app.viewMode === 'live') dotsHtml = ''; 
+            
+            const kitUrl = `https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${p.team_code}${p.pos === 1 ? '_1' : ''}-66.png`;
+            const bonus = (app.viewMode === 'live' && app.bonusMap[p.id]) ? app.bonusMap[p.id] : 0;
+            const bonusHtml = bonus > 0 ? `<span style="color:var(--accent); font-size:0.55rem; margin-left:2px;">+${bonus}</span>` : '';
+            const displayPoints = (p.event_points + bonus) * (p.multiplier || 1);
+
+            // Performance Colors: Gold (10+), Green (6+), Grey (<3)
+            let ptsBg = 'var(--primary)';
+            if (displayPoints >= 10) ptsBg = '#ca8a04';
+            else if (displayPoints >= 6) ptsBg = '#16a34a';
+            else if (displayPoints < 3) ptsBg = '#6b7280';
+
+            // --- NEXT GW MODE ---
+            let pcArrow = p.cost_change > 0 ? `<span class="pc-arrow pc-up">▲</span>` : (p.cost_change < 0 ? `<span class="pc-arrow pc-down">▼</span>` : '');
+            let bottomBar = `<div class="pill-data"><span>£${p.price}${pcArrow}</span><span class="points-badge" style="background:${ptsBg}">${displayPoints}${bonusHtml}</span></div>`;
+
+            // Smart Live: Show Fixture if match hasn't started yet
+            if (app.viewMode === 'live' && !app.isSimulating) {
+                const m = statusMap ? statusMap[p.team_id] : null;
+                if (m && m.status === 'FIX') {
+                    const f = fixtures[0] || { opp: '-', diff: 3 };
+                    bottomBar = `<div class="pill-data"><span>£${p.price}</span><span class="points-badge" style="background:var(--fdr-${f.diff}); color:var(--fdr-text-${f.diff > 2 ? 'dark' : 'light'})">${f.opp}</span></div>`;
+                }
+            }
+            
+            if (app.viewMode === 'next') {
+                dotsHtml = '';
+                evtHtml = '';
+                const nextF = fixtures[1] || { opp: '-', diff: 3 }; 
+                
+                // Calculate Projected Points (xP) = Form (50%) + Fixture Ease (50%)
+                let xP = (parseFloat(p.form||0) * 0.5) + ((6 - nextF.diff) * 1.0);
+                if (p.is_captain) xP *= 2;
+                
+                // Compact Layout: Tighter gap, smaller font, no wrap
+                bottomBar = `<div class="pill-data" style="gap:2px; white-space:nowrap;"><span style="font-weight:800; color:#374151; font-size:0.55rem;"><i class="fa-solid fa-wand-magic-sparkles" style="color:#e90052; font-size:0.5rem; margin-right:1px;"></i>${xP.toFixed(1)}</span><span class="points-badge" style="background:var(--fdr-${nextF.diff}); color:var(--fdr-text-${nextF.diff > 2 ? 'dark' : 'light'}); font-size:0.55rem; padding:0 2px;">${nextF.opp}</span></div>`;
+            }
+
+            // --- SMART STATUS ICONS (STACKED) ---
+            let stackHtml = '<div class="status-stack">';
+            
+            // 1. Availability (Injury/Suspension)
+            if (p.status === 'd') stackHtml += `<div class="status-icon si-warn"><i class="fa-solid fa-exclamation"></i></div>`;
+            else if (['i', 's', 'n'].includes(p.status)) stackHtml += `<div class="status-icon si-bad"><i class="fa-solid fa-xmark"></i></div>`;
+
+            // 2. Form & Diff
+            const form = parseFloat(p.form);
+            const sel = parseFloat(p.sel);
+            if (form > 6.0) stackHtml += `<div class="status-icon si-fire"><i class="fa-solid fa-fire"></i></div>`;
+            else if (form < 2.0) stackHtml += `<div class="status-icon si-cold"><i class="fa-regular fa-snowflake"></i></div>`;
+            if (sel < 10.0) stackHtml += `<div class="status-icon si-gem"><i class="fa-regular fa-gem"></i></div>`;
+            
+            stackHtml += '</div>';
+
+            // Heatmap Border: Next GW only, ignore Captains (who have gold border)
+            let pillStyle = '';
+            if (app.viewMode === 'next' && !p.is_captain) {
+                const nextF = fixtures[1] || { diff: 3 };
+                pillStyle = `style="border-color:var(--fdr-${nextF.diff});"`;
+            }
+
+            return `<div class="player-pill ${isBench ? 'bench-pill' : ''} ${extraClass}" ${pillStyle} onclick="app.openModal(${p.id})">
+                    ${isBench ? `<div class="bench-num">${benchNum}</div>` : ''} ${capBadge} ${subIcon} ${csShield} ${stackHtml} ${newBadge} ${matchBadge} ${dotsHtml} ${evtHtml}
+                    <img src="${kitUrl}" class="kit-img" onerror="this.style.display='none'">
+                    <div class="pill-name">${p.name}</div>
+                    ${bottomBar}
+                </div>`;
+        },
+
+        openModal: async (playerId) => {
+            const p = app.playersCache[playerId];
+            if (!p) return;
+            document.body.classList.add('scroll-lock'); // Lock BG
+            const overlay = document.getElementById('playerModalOverlay');
+            
+            const net = (p.transfers_in || 0) - (p.transfers_out || 0);
+            const netClass = net >= 0 ? 't-net-pos' : 't-net-neg';
+            const netStr = (Math.abs(net) > 999) ? (net/1000).toFixed(1) + 'k' : net;
+            const pc = p.cost_change > 0 ? '<span class="pc-arrow pc-up">▲</span>' : (p.cost_change < 0 ? '<span class="pc-arrow pc-down">▼</span>' : '');
+
+            // FIX: Show User Pricing Logic (PP/SP) for Debugging
+            const myPick = app.currentPicks.find(px => px.element === p.id);
+            let priceInfo = `<span style="font-weight:700">£${p.price}m</span>${pc}`;
+            
+            if (myPick && typeof myPick.selling_price === 'number') {
+                priceInfo += `<div style="font-size:0.7rem; color:#666; margin-top:4px; font-weight:500;">
+                    Paid: £${(myPick.purchase_price).toFixed(1)}m | Sell: <span style="color:var(--primary); font-weight:800;">£${(myPick.selling_price).toFixed(1)}m</span>
+                </div>`;
+            }
+
+            const kitUrl = `https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${p.team_code}-66.png`;
+            const headerHtml = `
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <img src="${kitUrl}" style="width:50px; height:64px; object-fit:contain; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.2));">
+                    <div>
+                        <div class="m-player-name">${p.name}</div>
+                        <div class="m-player-team">${p.team} • ${priceInfo}</div>
+                    </div>
+                </div>`;
+            
+            // Target the first child div of modal-header to replace default text
+            document.querySelector('#playerModalOverlay .modal-header > div').innerHTML = headerHtml;
+            
+            const fVal = parseFloat(p.form);
+            const fColor = fVal > 6.0 ? '#16a34a' : (fVal < 2.0 ? '#ef4444' : 'var(--primary)');
+            document.getElementById('modalForm').innerHTML = `<span style="color:${fColor}">${p.form}</span>`;
+
+            const sVal = parseFloat(p.sel);
+            const sColor = sVal < 10 ? '#8b5cf6' : (sVal > 40 ? '#ef4444' : 'var(--primary)');
+            document.getElementById('modalSel').innerHTML = `<span style="color:${sColor}">${p.sel}%</span>`;
+            
+            // Smart Stats: Show xP if planning (Transfer/Next), Points if Live
+            const isLive = app.currentTool === 'squad' && app.viewMode === 'live';
+            const ptsLabel = document.getElementById('modalPts').parentElement.querySelector('.m-stat-label');
+            
+            if (isLive) {
+                ptsLabel.innerText = "GW Points";
+                document.getElementById('modalPts').innerText = p.event_points;
+                document.getElementById('modalPts').style.color = 'var(--primary)';
+            } else {
+                const nextF = (app.fixMap[p.team_id] || [])[1] || { diff: 3 };
+                let xP = (parseFloat(p.form||0) * 0.5) + ((6 - nextF.diff) * 1.0);
+                ptsLabel.innerText = "xP (Next)";
+                document.getElementById('modalPts').innerHTML = `<i class="fa-solid fa-wand-magic-sparkles" style="font-size:0.8rem; margin-right:4px;"></i>${xP.toFixed(1)}`;
+                document.getElementById('modalPts').style.color = '#e90052';
+            }
+
+            const newsEl = document.getElementById('modalNews');
+            if (p.news) { newsEl.style.display = 'block'; newsEl.innerText = p.news; } else { newsEl.style.display = 'none'; }
+
+            const actionContainer = document.getElementById('modalActions');
+            const isOwned = app.currentPicks.some(pick => pick.element == p.id);
+            if (isOwned) {
+                actionContainer.innerHTML = `<div style="text-align:center; color:#888; font-size:0.8rem;">You own this player</div>`;
+            } else {
+                actionContainer.innerHTML = `<button class="action-btn btn-buy" onclick="app.showReplacements(${p.id}, ${p.pos})"><i class="fa-solid fa-arrow-right-arrow-left"></i> Transfer In</button><div id="repList_${p.id}" class="rep-list"></div>`;
+            }
+
+            overlay.classList.add('open');
+
+            // Cache Check
+            if (app.fixtureCache[playerId]) {
+                document.getElementById('modalFixtures').innerHTML = app.fixtureCache[playerId];
+                return;
+            }
+
+            // Skeleton Loader for Modal
+            document.getElementById('modalFixtures').innerHTML = `
+                <div class="fix-list" style="overflow:hidden; gap:8px;">
+                    ${Array(3).fill('<div class="fix-box skeleton" style="height:50px; border:none;"></div>').join('')}
+                </div>`;
+            try {
+                const data = await app.fetchUrl(`https://fantasy.premierleague.com/api/element-summary/${playerId}/`);
+                let html = '';
+
+                // History (Last 3 Games)
+                if (data.history) {
+                    data.history.slice(-3).forEach(h => {
+                        const opp = app.teams ? app.teams[h.opponent_team] : '-';
+                        html += `<div class="fix-box" style="opacity:0.6;"><div class="fix-gw-label">GW${h.round}</div><div class="fix-opp-pill" style="background:#f3f4f6; color:#4b5563;"><div>${opp} <span style="font-size:0.6rem; font-weight:400;">${h.was_home?'(H)':'(A)'}</span></div><div class="fix-loc" style="font-weight:800; color:${h.total_points>=6?'#16a34a':'#4b5563'}">${h.total_points}pts</div></div></div>`;
+                    });
+                }
+                
+                data.fixtures.slice(0, 5).forEach(f => {
+                    const isHome = f.is_home;
+                    const oppName = app.teams ? app.teams[isHome ? f.team_a : f.team_h] : '---';
+                    const diffClass = `d-${f.difficulty}`;
+                    
+                    html += `
+                        <div class="fix-box">
+                            <div class="fix-gw-label">GW${f.event}</div>
+                            <div class="fix-opp-pill ${diffClass}">
+                                <div>${oppName}</div>
+                                <div class="fix-loc">${isHome ? '(H)' : '(A)'}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                app.fixtureCache[playerId] = html;
+                document.getElementById('modalFixtures').innerHTML = html;
+            } catch (e) { document.getElementById('modalFixtures').innerHTML = '<div style="color:red; font-size:0.8rem;">Could not load fixtures.</div>'; }
+        },
+
+        showReplacements: (buyId, buyPos) => {
+            const list = document.getElementById(`repList_${buyId}`);
+            if (!list) return;
+            if (list.style.display === 'block') { list.style.display = 'none'; return; }
+            const candidates = app.currentPicks.filter(pick => app.playersCache[pick.element].pos === buyPos);
+            let html = `<div style="font-size:0.8rem; font-weight:700; color:#666; margin:10px 0 5px 0;">Replace who?</div>`;
+            candidates.forEach(pick => {
+                const p = app.playersCache[pick.element];
+                const bankAfter = (app.currentBank + p.price - app.playersCache[buyId].price).toFixed(1);
+                const color = bankAfter >= 0 ? '#16a34a' : '#ef4444';
+                html += `<div class="rep-item" onclick="app.closeModal(); app.simulate([${p.id}], [${buyId}])"><div style="display:flex; align-items:center; gap:10px;"><img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${p.team_code}-66.png" style="width:25px;"><div style="font-weight:700; font-size:0.9rem;">${p.name}</div></div><div style="text-align:right;"><div style="font-size:0.7rem; color:#888;">Sell: £${p.price}m</div><div style="font-size:0.75rem; font-weight:800; color:${color};">Bank: £${bankAfter}m</div></div></div>`;
+            });
+            list.innerHTML = html;
+            list.style.display = 'block';
+        },
+
+        openLeagues: async () => {
+            document.body.classList.add('scroll-lock'); // Lock BG
+            const id = localStorage.getItem('fpl_id_final') || document.getElementById('teamID').value;
+            if (!id) return alert("Please log in first.");
+            if (!app.userData) {
+                try { app.userData = await app.fetchUrl(`https://fantasy.premierleague.com/api/entry/${id}/`); } 
+                catch (e) { return alert("Could not load leagues. Check network."); }
+            }
+            if (!app.userData.leagues) return alert("No league data found.");
+            const leagues = app.userData.leagues.classic;
+            const container = document.getElementById('leaguesList');
+            let html = '';
+            if (leagues.length === 0) {
+                html = '<div style="text-align:center; padding:20px; color:#888;">No Classic Leagues found.</div>';
+            } else {
+                leagues.forEach(lg => {
+                    let arrow = lg.entry_rank < lg.entry_last_rank ? '<i class="fa-solid fa-arrow-up arrow-up" style="font-size:0.8rem"></i>' : (lg.entry_rank > lg.entry_last_rank ? '<i class="fa-solid fa-arrow-down arrow-down" style="font-size:0.8rem"></i>' : '<i class="fa-solid fa-minus arrow-same" style="font-size:0.8rem"></i>');
+                    // Pro Card Layout
+                    html += `
+                    <div class="league-item">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div style="background:#e0e7ff; color:#3730a3; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.8rem;">${lg.entry_rank <= 5 ? '<i class="fa-solid fa-trophy"></i>' : '#'}</div>
+                            <div class="lg-name">${lg.name}</div>
+                        </div>
+                        <div class="lg-rank-box">
+                            <div class="lg-rank">${lg.entry_rank.toLocaleString()}</div>
+                            <div style="font-size:0.65rem; color:#888; margin-top:2px;">${arrow} Prev: ${lg.entry_last_rank.toLocaleString()}</div>
+                        </div>
+                    </div>`;
+                });
+            }
+            container.innerHTML = html;
+            document.getElementById('leaguesModalOverlay').classList.add('open');
+        },
+        closeModal: () => { 
+            document.getElementById('playerModalOverlay').classList.remove('open');
+            document.body.classList.remove('scroll-lock'); // Unlock BG
+        }
+    };
+
+    // =========================================
+    // 3. GLOBAL HELPERS & EVENTS
+    // =========================================
+    function toggleMenu() { app.toggleMenu(); }
+    function switchTool(t) { app.switchTool(t); }
+    
+    function clearData() { 
+        const isLogged = !!localStorage.getItem('fpl_id_final');
+        const title = document.getElementById('lgTitle');
+        const msg = document.getElementById('lgMsg');
+        const btn = document.getElementById('lgConfirm');
+        
+        if (isLogged) {
+            title.innerText = "Log Out?";
+            msg.innerText = "Are you sure you want to disconnect your team?";
+            btn.style.display = 'block';
         } else {
-          eStatus.textContent = 'Data refreshed.'
+            title.innerText = "Guest Mode";
+            msg.innerText = "You are not connected. Please enter your Team ID on the home screen.";
+            btn.style.display = 'none';
         }
-      } catch (e) {
-        console.error(e)
-        eStatus.innerHTML = `<span class="danger">Failed to fetch FPL data. Please try again.</span>`
-      }
+        document.getElementById('logoutOverlay').classList.add('open');
+        // Sidebar toggle removed
     }
 
-    // Bind UI
-    el('refresh').addEventListener('click', init)
-    el('loadTeam').addEventListener('click', () => {
-      const id = (el('entryId').value||'').trim()
-      if (!id) { eMyTeam.innerHTML = '<span class="warn">Enter an Entry ID first.</span>'; return }
-      loadMyTeam(id)
-    })
+    function closeLogout() { document.getElementById('logoutOverlay').classList.remove('open'); }
+    function confirmLogout() { localStorage.removeItem('fpl_id_final'); location.reload(); }
 
-    bindSearchEvents()
-    init()
-  })()
-  </script></body>
+    function closeModal() { app.closeModal(); }
+    
+    // Fix: Handle Browser Back Button
+    window.onpopstate = (event) => {
+        if (event.state && event.state.tool) {
+            app.switchTool(event.state.tool, true, true); // suppressMenu=true, fromHistory=true
+        }
+    };
+
+    document.getElementById('playerModalOverlay').addEventListener('click', (e) => { 
+        if (e.target.id === 'playerModalOverlay') closeModal();
+    });
+    
+    document.addEventListener('DOMContentLoaded', app.init);
+    </script>
+</body>
 </html>
