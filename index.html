@@ -2121,15 +2121,29 @@
                 (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
                 (url) => `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(url)}`
             ];
-            for (let i = 0; i < proxies.length; i++) {
-                try {
-                    // Increased to 6s to allow large files (bootstrap) to finish on slow networks
-                    const c = new AbortController(); const id = setTimeout(() => c.abort(), 6000); 
-                    const r = await fetch(proxies[i](targetUrl), { signal: c.signal }); clearTimeout(id);
-                    if (r.ok) return await r.json();
-                } catch (e) {}
+            
+            // Parallel Fetch: Race to the first successful result
+            const requests = proxies.map(p => {
+                return (async () => {
+                    const c = new AbortController(); 
+                    const id = setTimeout(() => c.abort(), 6000); 
+                    try {
+                        const r = await fetch(p(targetUrl), { signal: c.signal }); 
+                        clearTimeout(id);
+                        if (!r.ok) throw new Error('Status ' + r.status);
+                        return await r.json();
+                    } catch (e) { 
+                        clearTimeout(id); 
+                        throw e; 
+                    }
+                })();
+            });
+
+            try {
+                return await Promise.any(requests);
+            } catch (e) {
+                throw new Error("Failed");
             }
-            throw new Error("Failed");
         },
 
         calcFreeTransfers: () => {
