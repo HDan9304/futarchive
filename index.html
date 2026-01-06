@@ -1743,8 +1743,6 @@
                     <div class="bench-header">Substitutes</div>
                     <div id="benchRow" class="bench-row"></div>
                 </div>
-
-                <div id="historyGraph" class="hist-box" style="border-bottom:none;"></div>
             </div> 
 
             <div id="transfersView" class="hidden">
@@ -3113,28 +3111,6 @@ if (transfers && transfers.length > 0) {
                 document.getElementById('dispGW').innerHTML = `${liveScore} <div style="font-size:0.5rem; color:white; opacity:0.8; line-height:1;">${playedCount}/11</div>`;
                 document.getElementById('dispTotal').previousElementSibling.innerText = "Total Pts";
                 document.getElementById('dispTotal').innerText = liveTotal;
-            }
-
-            // --- HISTORY GRAPH (Last 5 GWs) ---
-            if (history.current && history.current.length > 0) {
-                const recents = history.current.slice(-5);
-                const maxPts = Math.max(...recents.map(r => r.points), 60); // Scale baseline
-                
-                let graphHtml = '';
-                recents.forEach((r, i) => {
-                    const prev = recents[i-1] || r;
-                    const isGreen = r.overall_rank < prev.overall_rank;
-                    const isRed = r.overall_rank > prev.overall_rank;
-                    const barClass = isGreen ? 'hb-green' : (isRed ? 'hb-red' : 'hb-gray');
-                    const hPct = Math.max(10, (r.points / maxPts) * 100);
-                    
-                    graphHtml += `<div class="hist-col">
-                        <div class="hist-val">${r.points}</div>
-                        <div class="hist-bar ${barClass}" style="height:${hPct}%;"></div>
-                        <div class="hist-gw">GW${r.event}</div>
-                    </div>`;
-                });
-                document.getElementById('historyGraph').innerHTML = graphHtml;
             }
 
             let rankArrow = '<i class="fa-solid fa-minus r-grey"></i>';
