@@ -381,7 +381,7 @@
             overflow-x: auto;
             padding: 4px 20px; /* Side padding for scroll access */
             margin-bottom: 25px;
-            justify-content: flex-start; /* Fix: Prevents clipping on overflow */
+            justify-content: center; /* CENTERED */
             scrollbar-width: none;
             -webkit-overflow-scrolling: touch;
         }
@@ -3179,11 +3179,23 @@ if (transfers && transfers.length > 0) {
             updateTime();
             app.timer = setInterval(updateTime, 1000);
 
-            const usedChips = history.chips.map(c => c.name);
+            // 25/26 Rules: All chips reset after GW19
             const chipMap = { 'wildcard': 'WC', 'freehit': 'FH', 'bboost': 'BB', '3xc': 'TC' };
             const allChips = ['wildcard', 'freehit', 'bboost', '3xc'];
+            
+            const curGw = parseInt(gwName.replace(/\D/g,'')) || 1;
+            const isSecondHalf = curGw > 19; 
+
             const chipHtml = allChips.map(c => {
-                const isUsed = usedChips.includes(c);
+                // Check usage for the CURRENT half only (Set 1 vs Set 2)
+                // Note: We access history.chips directly to check the event ID
+                let isUsed = history.chips.some(u => u.name === c && (isSecondHalf ? u.event > 19 : u.event <= 19));
+                
+                // Rule: FH cannot be consecutive (If used in 19, cannot use in 20)
+                if (c === 'freehit' && curGw === 20 && history.chips.some(u => u.name === 'freehit' && u.event === 19)) {
+                    isUsed = true;
+                }
+
                 return `<div class="${isUsed ? 'chip-pill used' : 'chip-pill active'}">${chipMap[c]}</div>`;
             }).join('');
             document.getElementById('chipBar').innerHTML = chipHtml;
