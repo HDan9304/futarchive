@@ -2776,13 +2776,19 @@
                     return map;
                 };
                 const map1 = processFix(fix1); const map2 = processFix(fix2); const map3 = processFix(fix3); const map4 = processFix(fix4);
+                
+                // NEW: Handle Double (DGW) and Blank (BGW) Gameweeks
+                const getFix = (list) => {
+                    if (!list || list.length === 0) return { opp: 'BLK', diff: 8, is_home: false }; // Blank Penalty
+                    if (list.length === 1) return list[0]; 
+                    // DGW: Combine Opponents & Lower Difficulty (Bonus)
+                    const d = (list.reduce((a,b)=>a+b.diff,0) / list.length) - 1.5; 
+                    return { opp: list.map(x=>x.opp).join('+'), diff: Math.max(1, d), is_home: list[0].is_home };
+                };
+
                 const masterFixMap = {};
                 staticData.teams.forEach(t => {
-                    const f1 = (map1[t.id] || [])[0] || { opp: '-', diff: 3 };
-                    const f2 = (map2[t.id] || [])[0] || { opp: '-', diff: 3 };
-                    const f3 = (map3[t.id] || [])[0] || { opp: '-', diff: 3 };
-                    const f4 = (map4[t.id] || [])[0] || { opp: '-', diff: 3 };
-                    masterFixMap[t.id] = [f1, f2, f3, f4];
+                    masterFixMap[t.id] = [getFix(map1[t.id]), getFix(map2[t.id]), getFix(map3[t.id]), getFix(map4[t.id])];
                 });
                 app.fixMap = masterFixMap;
 
