@@ -2977,11 +2977,12 @@ if (transfers && transfers.length > 0) {
                 // --- LIVE BONUS PROJECTION LOGIC ---
                 const matchGroups = {};
                 liveData.elements.forEach(el => {
-                    const fixtureId = app.playersCache[el.id]?.statusMapId || 0; // Use fixture ID from statusMap if available
-                    // Fallback: Group by team if fixture ID isn't directly on player
                     const teamId = app.playersCache[el.id]?.team_id;
-                    const fid = app.statusMap[teamId]?.id || 0;
-                    if (fid) {
+                    const m = app.statusMap[teamId];
+                    
+                    // FIX: Prevent double counting. If match is FT, stop projecting.
+                    if (m && m.id && m.status !== 'FT') {
+                        const fid = m.id;
                         if (!matchGroups[fid]) matchGroups[fid] = [];
                         matchGroups[fid].push({ id: el.id, bps: el.stats.bps, bonus: el.stats.bonus });
                     }
