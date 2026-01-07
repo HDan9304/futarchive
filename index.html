@@ -285,9 +285,9 @@
         .sb-hero-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; margin-bottom: 4px; opacity: 0.9; }
         .sb-hero-val { 
             font-size: 3.5rem; font-weight: 800; line-height: 1; 
-            background: linear-gradient(180deg, #ffffff 0%, #e0e7ff 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            /* Gradient moved to JS to avoid Flexbox conflict */
             filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+            display: flex; justify-content: center; align-items: baseline; gap: 6px;
         }
 
         /* Secondary Stats Row */
@@ -391,7 +391,7 @@
             overflow-x: auto;
             padding: 4px 20px; /* Side padding for scroll access */
             margin-bottom: 25px;
-            justify-content: flex-start; /* Fix: Prevents clipping on overflow */
+            justify-content: center; /* FIX: Center alignment */
             scrollbar-width: none;
             -webkit-overflow-scrolling: touch;
         }
@@ -411,22 +411,22 @@
             text-transform: uppercase;
         }
 
-        /* Active: Illuminated Token */
+        /* Active: Clean Outline Badge */
         .chip-pill.active {
-            background: var(--primary);
-            color: var(--accent);
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 4px 12px rgba(55, 0, 60, 0.3);
+            background: white;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            box-shadow: 0 2px 5px rgba(55, 0, 60, 0.05);
             transform: translateY(0);
         }
-        .chip-pill.active:active { transform: scale(0.96); }
+        .chip-pill.active:active { transform: scale(0.96); background: #f9fafb; }
 
-        /* Used: Etched Stone Look */
+        /* Used: Ghosted / Faded */
         .chip-pill.used {
-            background: #e5e7eb; /* Darker Stone for Contrast */
-            color: #6b7280;
-            border: 1px solid #d1d5db; /* Defined Border */
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+            background: #f9fafb; 
+            color: #cbd5e1; /* Very light grey text */
+            border: 1px solid #f3f4f6; 
+            box-shadow: none;
             opacity: 1; 
             text-decoration: none; 
         }
@@ -541,7 +541,7 @@
         .captain-card {
             border: 2px solid #fbbf24 !important;
             box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
-            transform: scale(1.05);
+            /* transform: scale(1.05); REMOVED to match grid size */
             z-index: 20;
         }
         .cs-shield {
@@ -2075,7 +2075,10 @@
                 if (!pl) return;
                 // Score: Form + (5 - FixtureDiff)*2 + HomeAdvantage
                 const f = (fixMap[pl.team_id]||[])[fixIdx] || {diff:3, is_home:false};
-                let score = parseFloat(pl.form) + ((5 - f.diff) * 2.5) + (f.is_home ? 1 : 0);
+                
+                // FIX: Apply Injury Chance Multiplier to avoid recommending injured players
+                let chance = (pl.chance !== null ? pl.chance : 100) / 100;
+                let score = (parseFloat(pl.form) + ((5 - f.diff) * 2.5) + (f.is_home ? 1 : 0)) * chance;
                 
                 if (p.is_captain) cur = { name: pl.name, score };
                 if (p.is_vice_captain) curVice = { name: pl.name, score };
@@ -2836,77 +2839,8 @@
                 app.playersCache = players;
 
                 // --- LIVE BONUS PROJECTION LOGIC (INITIAL LOAD) ---
-                // FIX: Trust Live Data Fixtures directly for status
-                const finishedFixIds = new Set();
-                if (liveData.fixtures) {
-                    liveData.fixtures.forEach(f => {
-                        if (f.finished || f.finished_provisional) finishedFixIds.add(f.id);
-                    });
-                }
-
-                const matchGroups = {};
-                liveData.elements.forEach(el => {
-                    const p = app.playersCache[el.id];
-                    if (!p) return;
-
-                    const m = app.statusMap[p.team_id];
-                    const fid = m ? m.id : 0;
-                    
-                    // 1. HARD STOP: If match is finished, NO PROJECTION.
-                    if (fid && finishedFixIds.has(fid)) return;
-                    
-                    // 2. Safety Check: If bonus already confirmed
-                    const s = el.stats;
-                    if (s.bonus > 0) return;
-
-                    if (fid) {
-                        if (!matchGroups[fid]) matchGroups[fid] = [];
-                        matchGroups[fid].push({ id: el.id, bps: s.bps, bonus: s.bonus });
-                    }
-                });
-
-                    // 2. Safety Check: Detect if Bonus is ALREADY in Total (Proxy Lag Fix)
-                    const s = el.stats;
-                    let raw = 0;
-                    if (s.minutes > 0) raw += (s.minutes >= 60 ? 2 : 1);
-                    if (s.goals_scored) raw += (s.goals_scored * (p.pos <= 2 ? 6 : (p.pos === 3 ? 5 : 4)));
-                    if (s.assists) raw += (s.assists * 3);
-                    if (s.clean_sheets) raw += (p.pos <= 2 ? 4 : (p.pos === 3 ? 1 : 0));
-                    if (s.goals_conceded && p.pos <= 2) raw -= Math.floor(s.goals_conceded / 2);
-                    if (s.own_goals) raw -= (s.own_goals * 2);
-                    if (s.yellow_cards) raw -= 1;
-                    if (s.red_cards) raw -= 3;
-                    if (s.saves) raw += Math.floor(s.saves / 3);
-                    if (s.penalties_saved) raw += 5;
-                    if (s.penalties_missed) raw -= 2;
-
-                    // If Official Total > Raw Calc, Bonus is already added. STOP.
-                    if (s.total_points > raw) return;
-                    // FIX: If bonus is explicitly confirmed in stats, definitely STOP.
-                    if (s.bonus > 0) return;
-
-                    const fid = m ? m.id : (p.team_id || 0);
-                    if (fid) {
-                        if (!matchGroups[fid]) matchGroups[fid] = [];
-                        matchGroups[fid].push({ id: el.id, bps: s.bps, bonus: s.bonus });
-                    }
-                });
-
+                // RESET: Removed projections. Relying 100% on Official FPL Data.
                 app.bonusMap = {};
-                Object.values(matchGroups).forEach(players => {
-                    players.sort((a, b) => b.bps - a.bps);
-                    if (players.length > 0 && players[0].bonus === 0) app.bonusMap[players[0].id] = 3;
-
-                    if (players.length > 1) {
-                        const b2 = (players[1].bps === players[0].bps) ? 3 : 2;
-                        if (players[1].bonus === 0) app.bonusMap[players[1].id] = b2;
-
-                        if (players.length > 2 && players[2].bonus === 0) {
-                            if (players[2].bps === players[1].bps) app.bonusMap[players[2].id] = b2;
-                            else app.bonusMap[players[2].id] = 1;
-                        }
-                    }
-                });
 
                 // FIX: SMART BUDGET CALCULATION
                 // 1. If player exists in transfer history -> Use that price (Exact)
@@ -3028,75 +2962,8 @@ if (transfers && transfers.length > 0) {
                 });
 
                 // --- LIVE BONUS PROJECTION LOGIC ---
-                // FIX: Trust Live Data Fixtures directly
-                const finishedFixIds = new Set();
-                if (liveData.fixtures) {
-                    liveData.fixtures.forEach(f => {
-                        if (f.finished || f.finished_provisional) finishedFixIds.add(f.id);
-                    });
-                }
-
-                const matchGroups = {};
-                liveData.elements.forEach(el => {
-                    const p = app.playersCache[el.id];
-                    if (!p) return;
-
-                    const m = app.statusMap[p.team_id];
-                    const fid = m ? m.id : 0;
-
-                    // 1. HARD STOP: If match is finished, NO PROJECTION.
-                    if (fid && finishedFixIds.has(fid)) return;
-
-                    // 2. Safety Check: If bonus already confirmed
-                    const s = el.stats;
-                    if (s.bonus > 0) return;
-
-                    if (fid) {
-                        if (!matchGroups[fid]) matchGroups[fid] = [];
-                        matchGroups[fid].push({ id: el.id, bps: s.bps, bonus: s.bonus });
-                    }
-                });
-
-                    // 2. Safety Check: Detect if Bonus is ALREADY in Total (Proxy Lag Fix)
-                    const s = el.stats;
-                    let raw = 0;
-                    if (s.minutes > 0) raw += (s.minutes >= 60 ? 2 : 1);
-                    if (s.goals_scored) raw += (s.goals_scored * (p.pos <= 2 ? 6 : (p.pos === 3 ? 5 : 4)));
-                    if (s.assists) raw += (s.assists * 3);
-                    if (s.clean_sheets) raw += (p.pos <= 2 ? 4 : (p.pos === 3 ? 1 : 0));
-                    if (s.goals_conceded && p.pos <= 2) raw -= Math.floor(s.goals_conceded / 2);
-                    if (s.own_goals) raw -= (s.own_goals * 2);
-                    if (s.yellow_cards) raw -= 1;
-                    if (s.red_cards) raw -= 3;
-                    if (s.saves) raw += Math.floor(s.saves / 3);
-                    if (s.penalties_saved) raw += 5;
-                    if (s.penalties_missed) raw -= 2;
-
-                    // If Official Total > Raw Calc, Bonus is already added. STOP.
-                    if (s.total_points > raw) return;
-
-                    const fid = m ? m.id : (p.team_id || 0); // Fallback to Team ID grouping if Fixture ID missing
-                    if (fid) {
-                        if (!matchGroups[fid]) matchGroups[fid] = [];
-                        matchGroups[fid].push({ id: el.id, bps: s.bps, bonus: s.bonus });
-                    }
-                });
+                // RESET: Removed projections. Relying 100% on Official FPL Data.
                 app.bonusMap = {};
-                Object.values(matchGroups).forEach(pList => {
-                    pList.sort((a, b) => b.bps - a.bps);
-                    // Only apply projection if confirmed bonus is 0
-                    if (pList.length > 0 && pList[0].bonus === 0) app.bonusMap[pList[0].id] = 3;
-                    
-                    if (pList.length > 1) {
-                        const b2 = (pList[1].bps === pList[0].bps) ? 3 : 2;
-                        if (pList[1].bonus === 0) app.bonusMap[pList[1].id] = b2;
-                        
-                        if (pList.length > 2 && pList[2].bonus === 0) {
-                            if (pList[2].bps === pList[1].bps) app.bonusMap[pList[2].id] = b2;
-                            else app.bonusMap[pList[2].id] = 1;
-                        }
-                    }
-                });
 
                 // Only re-render live data if the user is NOT in Preview/Simulation mode
                 if (app.currentTool === 'squad' && !app.isSimulating) app.render(app.userData, app.currentPicks, app.playersCache, app.fixMap, app.statusMap, app.currentStats, app.historyData, app.deadline, app.gwName);
@@ -3195,8 +3062,10 @@ if (transfers && transfers.length > 0) {
                         const pl = players[p.element];
                         if (pl) {
                             const f = (fixMap[pl.team_id]||[])[1] || {diff:3};
-                            // xP Formula: Form*0.5 + Ease*1.0
-                            let xP = (parseFloat(pl.form||0)*0.5) + ((6-f.diff)*1.0);
+                            // xP Formula: (Form + Ease) * Chance of Playing
+                            let chance = (pl.chance !== null ? pl.chance : 100) / 100;
+                            let xP = ((parseFloat(pl.form||0)*0.5) + ((6-f.diff)*1.0)) * chance;
+                            
                             xpTotal += (xP * (p.multiplier || 1));
                             diffTotal += f.diff; count++;
                         }
@@ -3204,12 +3073,14 @@ if (transfers && transfers.length > 0) {
                 });
                 // Fix: Targeting the new class .sb-hero-label and .sb-label
                 document.getElementById('dispGW').previousElementSibling.innerText = "Projected Pts";
-                document.getElementById('dispGW').innerHTML = `${xpTotal.toFixed(1)} <span style="font-size:1rem; opacity:0.6; margin-left:5px;">xP</span>`;
+                // FIX: Flex layout - Gradient on Number, Solid on Label
+                document.getElementById('dispGW').innerHTML = `<span style="background:linear-gradient(180deg,#fff 0%,#e0e7ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${xpTotal.toFixed(1)}</span><span style="font-size:1rem;color:#a5b4fc;font-weight:700;">xP</span>`;
                 document.getElementById('dispTotal').previousElementSibling.innerText = "Avg Difficulty";
                 document.getElementById('dispTotal').innerText = count ? (diffTotal/count).toFixed(1) : '0.0';
             } else {
                 document.getElementById('dispGW').previousElementSibling.innerText = "GW Points";
-                document.getElementById('dispGW').innerHTML = `${liveScore}`; // Removed played count from Hero to keep it clean
+                // FIX: Gradient on Number
+                document.getElementById('dispGW').innerHTML = `<span style="background:linear-gradient(180deg,#fff 0%,#e0e7ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${liveScore}</span>`; 
                 document.getElementById('dispTotal').previousElementSibling.innerText = "Total Points";
                 document.getElementById('dispTotal').innerText = liveTotal;
             }
@@ -3455,7 +3326,9 @@ if (transfers && transfers.length > 0) {
                 const m = statusMap ? statusMap[p.team_id] : null;
                 if (m && m.status === 'FIX') {
                     const f = fixtures[0] || { opp: '-', diff: 3 };
-                    bottomBar = `<div class="pill-data"><span>£${p.price}</span><span class="points-badge" style="background:var(--fdr-${f.diff}); color:var(--fdr-text-${f.diff > 2 ? 'dark' : 'light'})">${f.opp}</span></div>`;
+                    // FIX: Text Contrast (Dark for Green/Grey, Light for Red/DarkGreen)
+                    const textColor = (f.diff === 2 || f.diff === 3) ? 'dark' : 'light';
+                    bottomBar = `<div class="pill-data"><span>£${p.price}</span><span class="points-badge" style="background:var(--fdr-${f.diff}); color:var(--fdr-text-${textColor})">${f.opp}</span></div>`;
                 }
             }
             
@@ -3464,12 +3337,16 @@ if (transfers && transfers.length > 0) {
                 evtHtml = '';
                 const nextF = fixtures[1] || { opp: '-', diff: 3 }; 
                 
-                // Calculate Projected Points (xP) = Form (50%) + Fixture Ease (50%)
-                let xP = (parseFloat(p.form||0) * 0.5) + ((6 - nextF.diff) * 1.0);
+                // Calculate Projected Points (xP) = (Form + Ease) * Chance
+                let chance = (p.chance !== null ? p.chance : 100) / 100;
+                let xP = ((parseFloat(p.form||0) * 0.5) + ((6 - nextF.diff) * 1.0)) * chance;
+                
                 if (p.is_captain) xP *= 2;
                 
-                // Compact Layout: Tighter gap, smaller font, no wrap
-                bottomBar = `<div class="pill-data" style="gap:2px; white-space:nowrap;"><span style="font-weight:800; color:#374151; font-size:0.55rem;"><i class="fa-solid fa-wand-magic-sparkles" style="color:#e90052; font-size:0.5rem; margin-right:1px;"></i>${xP.toFixed(1)}</span><span class="points-badge" style="background:var(--fdr-${nextF.diff}); color:var(--fdr-text-${nextF.diff > 2 ? 'dark' : 'light'}); font-size:0.55rem; padding:0 2px;">${nextF.opp}</span></div>`;
+                // Standard Layout: Removed inline font-size to match Live view (0.7rem)
+                // FIX: Text Contrast (Dark for Green/Grey, Light for Red/DarkGreen)
+                const textColor = (nextF.diff === 2 || nextF.diff === 3) ? 'dark' : 'light';
+                bottomBar = `<div class="pill-data" style="gap:2px; white-space:nowrap;"><span style="font-weight:800; color:#374151;"><i class="fa-solid fa-wand-magic-sparkles" style="color:#e90052; font-size:0.6rem; margin-right:1px;"></i>${xP.toFixed(1)}</span><span class="points-badge" style="background:var(--fdr-${nextF.diff}); color:var(--fdr-text-${textColor}); padding:0 3px;">${nextF.opp}</span></div>`;
             }
 
             // --- SMART STATUS ICONS (STACKED) ---
@@ -3555,7 +3432,10 @@ if (transfers && transfers.length > 0) {
                 document.getElementById('modalPts').style.color = 'var(--primary)';
             } else {
                 const nextF = (app.fixMap[p.team_id] || [])[1] || { diff: 3 };
-                let xP = (parseFloat(p.form||0) * 0.5) + ((6 - nextF.diff) * 1.0);
+                
+                let chance = (p.chance !== null ? p.chance : 100) / 100;
+                let xP = ((parseFloat(p.form||0) * 0.5) + ((6 - nextF.diff) * 1.0)) * chance;
+
                 ptsLabel.innerText = "xP (Next)";
                 document.getElementById('modalPts').innerHTML = `<i class="fa-solid fa-wand-magic-sparkles" style="font-size:0.8rem; margin-right:4px;"></i>${xP.toFixed(1)}`;
                 document.getElementById('modalPts').style.color = '#e90052';
