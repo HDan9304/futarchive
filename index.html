@@ -2828,14 +2828,35 @@
                 // --- LIVE BONUS PROJECTION LOGIC (INITIAL LOAD) ---
                 const matchGroups = {};
                 liveData.elements.forEach(el => {
-                    const teamId = app.playersCache[el.id]?.team_id;
-                    const m = app.statusMap[teamId];
-                    // FIX: Only project bonus if match is NOT Finished ('FT'). 
-                    // If FT, the official points already include bonus.
-                    if (m && m.id && m.status !== 'FT') {
-                        const fid = m.id;
+                    const p = app.playersCache[el.id];
+                    if (!p) return;
+
+                    const m = app.statusMap[p.team_id];
+                    // 1. Status Check (Fast Fail)
+                    if (m && m.status === 'FT') return;
+
+                    // 2. Safety Check: Detect if Bonus is ALREADY in Total (Proxy Lag Fix)
+                    const s = el.stats;
+                    let raw = 0;
+                    if (s.minutes > 0) raw += (s.minutes >= 60 ? 2 : 1);
+                    if (s.goals_scored) raw += (s.goals_scored * (p.pos <= 2 ? 6 : (p.pos === 3 ? 5 : 4)));
+                    if (s.assists) raw += (s.assists * 3);
+                    if (s.clean_sheets) raw += (p.pos <= 2 ? 4 : (p.pos === 3 ? 1 : 0));
+                    if (s.goals_conceded && p.pos <= 2) raw -= Math.floor(s.goals_conceded / 2);
+                    if (s.own_goals) raw -= (s.own_goals * 2);
+                    if (s.yellow_cards) raw -= 1;
+                    if (s.red_cards) raw -= 3;
+                    if (s.saves) raw += Math.floor(s.saves / 3);
+                    if (s.penalties_saved) raw += 5;
+                    if (s.penalties_missed) raw -= 2;
+
+                    // If Official Total > Raw Calc, Bonus is already added. STOP.
+                    if (s.total_points > raw) return;
+
+                    const fid = m ? m.id : (p.team_id || 0);
+                    if (fid) {
                         if (!matchGroups[fid]) matchGroups[fid] = [];
-                        matchGroups[fid].push({ id: el.id, bps: el.stats.bps, bonus: el.stats.bonus });
+                        matchGroups[fid].push({ id: el.id, bps: s.bps, bonus: s.bonus });
                     }
                 });
 
