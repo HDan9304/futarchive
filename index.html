@@ -256,42 +256,52 @@
            4. SCOREBOARD & DASHBOARD UI
            ========================================= */
         .scoreboard {
-            background: linear-gradient(135deg, #37003c 0%, #6a1b6e 100%); /* Pro Gradient */
+            background: linear-gradient(145deg, #2D0036 0%, #580068 100%);
             color: white;
-            padding: 24px 20px;
-            border-radius: 24px; /* Smoother Corners */
-            margin-bottom: 25px;
-            box-shadow: 0 20px 40px -10px rgba(55, 0, 60, 0.5); /* Deep Glow */
-            border: 1px solid rgba(255,255,255,0.15); /* Glass Edge */
+            padding: 0; /* Removing padding for full-width internal layout */
+            border-radius: 24px;
+            margin-bottom: 30px;
+            box-shadow: 0 25px 50px -12px rgba(55, 0, 60, 0.6);
+            border: 1px solid rgba(255,255,255,0.1);
             position: relative; overflow: hidden;
+            text-align: center;
+        }
+        
+        /* Glass Shine Effect */
+        .scoreboard::before {
+            content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            pointer-events: none;
         }
 
         .manager-name {
-            font-size: 1.1rem;
-            font-weight: 800;
-            text-align: center;
-            margin-bottom: 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 10px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            text-align: center;
-        }
-
-        .stat-box { display: flex; flex-direction: column; }
-        .stat-label {
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            opacity: 0.7;
-            font-weight: 600;
+            font-size: 0.9rem; font-weight: 700; opacity: 0.9;
+            padding: 15px 0 5px 0;
             letter-spacing: 0.5px;
         }
-        .stat-val { font-size: 1.1rem; font-weight: 800; color: var(--accent); }
-        .stat-val-small { font-size: 0.9rem; font-weight: 700; color: white; }
+
+        /* Hero Section for GW Points */
+        .sb-hero { padding: 10px 0 25px 0; position: relative; }
+        .sb-hero-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; margin-bottom: 4px; opacity: 0.9; }
+        .sb-hero-val { 
+            font-size: 3.5rem; font-weight: 800; line-height: 1; 
+            background: linear-gradient(180deg, #ffffff 0%, #e0e7ff 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+        }
+
+        /* Secondary Stats Row */
+        .sb-grid {
+            display: flex; justify-content: space-around;
+            background: rgba(0,0,0,0.2);
+            padding: 15px 10px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .sb-stat { display: flex; flex-direction: column; gap: 4px; flex: 1; position: relative; }
+        .sb-stat:first-child::after { content: ""; position: absolute; right: 0; top: 10%; height: 80%; width: 1px; background: rgba(255,255,255,0.1); }
+        
+        .sb-label { font-size: 0.65rem; text-transform: uppercase; color: #a5b4fc; font-weight: 700; letter-spacing: 0.5px; }
+        .sb-val { font-size: 1.1rem; font-weight: 700; color: white; display: flex; align-items: center; justify-content: center; gap: 6px; }
 
         /* --- History Graph --- */
         .hist-box {
@@ -3094,14 +3104,15 @@ if (transfers && transfers.length > 0) {
                         }
                     }
                 });
+                // Fix: Targeting the new class .sb-hero-label and .sb-label
                 document.getElementById('dispGW').previousElementSibling.innerText = "Projected Pts";
-                document.getElementById('dispGW').innerHTML = `${xpTotal.toFixed(1)} <div style="font-size:0.5rem; color:white; opacity:0.8; line-height:1;">xP</div>`;
+                document.getElementById('dispGW').innerHTML = `${xpTotal.toFixed(1)} <span style="font-size:1rem; opacity:0.6; margin-left:5px;">xP</span>`;
                 document.getElementById('dispTotal').previousElementSibling.innerText = "Avg Difficulty";
                 document.getElementById('dispTotal').innerText = count ? (diffTotal/count).toFixed(1) : '0.0';
             } else {
                 document.getElementById('dispGW').previousElementSibling.innerText = "GW Points";
-                document.getElementById('dispGW').innerHTML = `${liveScore} <div style="font-size:0.5rem; color:white; opacity:0.8; line-height:1;">${playedCount}/11</div>`;
-                document.getElementById('dispTotal').previousElementSibling.innerText = "Total Pts";
+                document.getElementById('dispGW').innerHTML = `${liveScore}`; // Removed played count from Hero to keep it clean
+                document.getElementById('dispTotal').previousElementSibling.innerText = "Total Points";
                 document.getElementById('dispTotal').innerText = liveTotal;
             }
 
