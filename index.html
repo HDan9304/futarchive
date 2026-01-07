@@ -2829,8 +2829,11 @@
                 const matchGroups = {};
                 liveData.elements.forEach(el => {
                     const teamId = app.playersCache[el.id]?.team_id;
-                    const fid = app.statusMap[teamId]?.id || 0;
-                    if (fid) {
+                    const m = app.statusMap[teamId];
+                    // FIX: Only project bonus if match is NOT Finished ('FT'). 
+                    // If FT, the official points already include bonus.
+                    if (m && m.id && m.status !== 'FT') {
+                        const fid = m.id;
                         if (!matchGroups[fid]) matchGroups[fid] = [];
                         matchGroups[fid].push({ id: el.id, bps: el.stats.bps, bonus: el.stats.bonus });
                     }
