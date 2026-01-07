@@ -1739,31 +1739,6 @@
             </div>
         </div>
 
-        <div id="chatFab" class="chat-fab" onclick="app.toggleChat()">
-            <i class="fa-solid fa-robot"></i>
-        </div>
-
-        <div id="chatWindow" class="chat-window">
-            <div class="chat-header">
-                <div style="font-weight:800; display:flex; align-items:center; gap:8px;">
-                    <i class="fa-solid fa-bolt" style="color:var(--accent);"></i> FPL Assistant
-                </div>
-                <div style="display:flex; gap:10px;">
-                    <i class="fa-solid fa-gear" onclick="app.setApiKey()" style="cursor:pointer; opacity:0.7;"></i>
-                    <i class="fa-solid fa-xmark" onclick="app.toggleChat()" style="cursor:pointer;"></i>
-                </div>
-            </div>
-            <div id="chatMessages" class="chat-body">
-                <div class="chat-msg bot">Hello! I'm your FPL Assistant. I have analyzed your team. Ask me about transfers, chips, or strategy!</div>
-            </div>
-            <div class="chat-input-area">
-                <input type="text" id="chatInput" placeholder="e.g. Should I sell Haaland?" onkeypress="if(event.key==='Enter') app.sendChatMessage()">
-                <button class="chat-send" onclick="app.sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
-            </div>
-        </div>
-
-    </div>
-
                 <div class="countdown-container">
                     <div id="gwCountdown" class="countdown-pill">Loading...</div>
                 </div>
@@ -1849,10 +1824,30 @@
                     <div id="plannerGrid" style="border:1px solid var(--border); border-radius:12px; overflow:hidden; text-align:left;"></div>
                 </div>
             </div>
+        </div> <div id="chatFab" class="chat-fab" onclick="app.toggleChat()">
+            <i class="fa-solid fa-robot"></i>
         </div>
-    </div>
-    
-    <script>
+
+        <div id="chatWindow" class="chat-window">
+            <div class="chat-header">
+                <div style="font-weight:800; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-bolt" style="color:var(--accent);"></i> FPL Assistant
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <i class="fa-solid fa-gear" onclick="app.setApiKey()" style="cursor:pointer; opacity:0.7;"></i>
+                    <i class="fa-solid fa-xmark" onclick="app.toggleChat()" style="cursor:pointer;"></i>
+                </div>
+            </div>
+            <div id="chatMessages" class="chat-body">
+                <div class="chat-msg bot">Hello! I'm your FPL Assistant. I have analyzed your team. Ask me about transfers, chips, or strategy!</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="e.g. Should I sell Haaland?" onkeypress="if(event.key==='Enter') app.sendChatMessage()">
+                <button class="chat-send" onclick="app.sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+    </div> <script>
     // =========================================
     // 1. DATA & HELPERS
     // =========================================
