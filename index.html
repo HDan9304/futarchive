@@ -2778,6 +2778,16 @@
                 }
                 app.statusMap = statusMap;
 
+                // FIX: Sync Status from Live Data (More accurate than Fixtures API)
+                if (liveData.fixtures) {
+                    liveData.fixtures.forEach(f => {
+                        if (f.finished || f.finished_provisional) {
+                            if (app.statusMap[f.team_h]) app.statusMap[f.team_h].status = 'FT';
+                            if (app.statusMap[f.team_a]) app.statusMap[f.team_a].status = 'FT';
+                        }
+                    });
+                }
+
                 const processFix = (fixList) => {
                     const map = {};
                     if (!fixList) return map;
@@ -2826,14 +2836,34 @@
                 app.playersCache = players;
 
                 // --- LIVE BONUS PROJECTION LOGIC (INITIAL LOAD) ---
+                // FIX: Trust Live Data Fixtures directly for status
+                const finishedFixIds = new Set();
+                if (liveData.fixtures) {
+                    liveData.fixtures.forEach(f => {
+                        if (f.finished || f.finished_provisional) finishedFixIds.add(f.id);
+                    });
+                }
+
                 const matchGroups = {};
                 liveData.elements.forEach(el => {
                     const p = app.playersCache[el.id];
                     if (!p) return;
 
                     const m = app.statusMap[p.team_id];
-                    // 1. Status Check (Fast Fail)
-                    if (m && m.status === 'FT') return;
+                    const fid = m ? m.id : 0;
+                    
+                    // 1. HARD STOP: If match is finished, NO PROJECTION.
+                    if (fid && finishedFixIds.has(fid)) return;
+                    
+                    // 2. Safety Check: If bonus already confirmed
+                    const s = el.stats;
+                    if (s.bonus > 0) return;
+
+                    if (fid) {
+                        if (!matchGroups[fid]) matchGroups[fid] = [];
+                        matchGroups[fid].push({ id: el.id, bps: s.bps, bonus: s.bonus });
+                    }
+                });
 
                     // 2. Safety Check: Detect if Bonus is ALREADY in Total (Proxy Lag Fix)
                     const s = el.stats;
@@ -2852,6 +2882,8 @@
 
                     // If Official Total > Raw Calc, Bonus is already added. STOP.
                     if (s.total_points > raw) return;
+                    // FIX: If bonus is explicitly confirmed in stats, definitely STOP.
+                    if (s.bonus > 0) return;
 
                     const fid = m ? m.id : (p.team_id || 0);
                     if (fid) {
@@ -2996,14 +3028,34 @@ if (transfers && transfers.length > 0) {
                 });
 
                 // --- LIVE BONUS PROJECTION LOGIC ---
+                // FIX: Trust Live Data Fixtures directly
+                const finishedFixIds = new Set();
+                if (liveData.fixtures) {
+                    liveData.fixtures.forEach(f => {
+                        if (f.finished || f.finished_provisional) finishedFixIds.add(f.id);
+                    });
+                }
+
                 const matchGroups = {};
                 liveData.elements.forEach(el => {
                     const p = app.playersCache[el.id];
                     if (!p) return;
 
                     const m = app.statusMap[p.team_id];
-                    // 1. Status Check (Fast Fail)
-                    if (m && m.status === 'FT') return;
+                    const fid = m ? m.id : 0;
+
+                    // 1. HARD STOP: If match is finished, NO PROJECTION.
+                    if (fid && finishedFixIds.has(fid)) return;
+
+                    // 2. Safety Check: If bonus already confirmed
+                    const s = el.stats;
+                    if (s.bonus > 0) return;
+
+                    if (fid) {
+                        if (!matchGroups[fid]) matchGroups[fid] = [];
+                        matchGroups[fid].push({ id: el.id, bps: s.bps, bonus: s.bonus });
+                    }
+                });
 
                     // 2. Safety Check: Detect if Bonus is ALREADY in Total (Proxy Lag Fix)
                     const s = el.stats;
