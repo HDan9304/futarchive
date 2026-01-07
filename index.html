@@ -1862,12 +1862,25 @@
                     if (total > maxScore) { maxScore = total; bestForm = f.join('-'); bestLineup = [gk.p.id, ...defs.map(x=>x.p.id), ...mids.map(x=>x.p.id), ...fwds.map(x=>x.p.id)]; }
                 }
             });
-            const bench = rated.filter(x => !bestLineup.includes(x.p.id)).sort((a,b) => {
-                if (a.p.pos === 1) return -1;
+
+            // PRO BENCH: 1st Sub must be "Safe" (Reliable Mins). Others are high upside.
+            const benchRaw = rated.filter(x => !bestLineup.includes(x.p.id));
+            const safeSub = benchRaw.find(x => x.p.pos !== 1 && x.p.minutes > 60 && x.p.chance === 100);
+
+            const bench = benchRaw.sort((a,b) => {
+                if (a.p.pos === 1) return -1; // GK last
                 if (b.p.pos === 1) return 1;
+                // Force safe sub to top of outfield bench
+                if (safeSub) {
+                   if (a.p.id === safeSub.p.id) return -1;
+                   if (b.p.id === safeSub.p.id) return 1;
+                }
                 return b.score - a.score;
             });
-            return { formation: bestForm, bench: bench.map(x => x.p), bestLineup };
+
+            // CAPTAINCY: Best score in Starting XI
+            const starters = rated.filter(x => bestLineup.includes(x.p.id)).sort((a,b) => b.score - a.score);
+            return { formation: bestForm, bench: bench.map(x => x.p), bestLineup, captain: starters[0].p.id, vice: starters[1].p.id };
         },
 
         analyze: (myPicks, allPlayers, bank, fixtures, ftCount) => {
@@ -2586,18 +2599,12 @@
                         if (p) renderPicks.push({ ...p, position: 12 + i });
                     });
 
-                    // 3. Auto-Captain (Best Next Fixture)
-                    let bestCap = null, maxScore = -99;
+                    // 3. Auto-Captain (From Optimizer)
                     renderPicks.forEach(p => {
-                        p.is_captain = false; p.is_vice_captain = false; p.multiplier = 1;
-                        if (p.position <= 11) {
-                            const pl = app.playersCache[p.element];
-                            const f = (app.fixMap[pl.team_id] || [])[1] || { diff: 3 };
-                            const score = (parseFloat(pl.form||0) * 0.5) + ((6 - f.diff) * 2.0);
-                            if (score > maxScore) { maxScore = score; bestCap = p; }
-                        }
+                        p.is_captain = (p.element === opt.captain);
+                        p.is_vice_captain = (p.element === opt.vice);
+                        p.multiplier = p.is_captain ? 2 : 1;
                     });
-                    if (bestCap) { bestCap.is_captain = true; bestCap.multiplier = 2; }
                 }
 
                 app.render(app.userData, renderPicks, app.playersCache, app.fixMap, app.statusMap, app.currentStats, app.historyData, app.deadline, app.gwName);
@@ -2639,6 +2646,13 @@
                 const p = simPicks.find(x => x.element === player.id);
                 p.position = 12 + i;
                 finalPicks.push(p);
+            });
+
+            // 3. Apply Captaincy from Optimizer
+            finalPicks.forEach(p => {
+                p.is_captain = (p.element === opt.captain);
+                p.is_vice_captain = (p.element === opt.vice);
+                p.multiplier = p.is_captain ? 2 : 1;
             });
 
             app.currentTool = 'squad';
@@ -2765,13 +2779,19 @@
                     return map;
                 };
                 const map1 = processFix(fix1); const map2 = processFix(fix2); const map3 = processFix(fix3); const map4 = processFix(fix4);
+                
+                // NEW: Handle Double (DGW) and Blank (BGW) Gameweeks
+                const getFix = (list) => {
+                    if (!list || list.length === 0) return { opp: 'BLK', diff: 8, is_home: false }; // Blank Penalty
+                    if (list.length === 1) return list[0]; 
+                    // DGW: Combine Opponents & Lower Difficulty (Bonus)
+                    const d = (list.reduce((a,b)=>a+b.diff,0) / list.length) - 1.5; 
+                    return { opp: list.map(x=>x.opp).join('+'), diff: Math.max(1, d), is_home: list[0].is_home };
+                };
+
                 const masterFixMap = {};
                 staticData.teams.forEach(t => {
-                    const f1 = (map1[t.id] || [])[0] || { opp: '-', diff: 3 };
-                    const f2 = (map2[t.id] || [])[0] || { opp: '-', diff: 3 };
-                    const f3 = (map3[t.id] || [])[0] || { opp: '-', diff: 3 };
-                    const f4 = (map4[t.id] || [])[0] || { opp: '-', diff: 3 };
-                    masterFixMap[t.id] = [f1, f2, f3, f4];
+                    masterFixMap[t.id] = [getFix(map1[t.id]), getFix(map2[t.id]), getFix(map3[t.id]), getFix(map4[t.id])];
                 });
                 app.fixMap = masterFixMap;
 
