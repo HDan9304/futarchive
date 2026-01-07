@@ -1559,49 +1559,6 @@
             transform: translateX(-100%); animation: shimmer 1.5s infinite; 
         }
         @keyframes shimmer { 100% { transform: translateX(100%); } }
-
-        /* --- AI Chat Styles --- */
-        .chat-fab {
-            position: absolute; bottom: 20px; right: 20px;
-            width: 56px; height: 56px;
-            background: var(--primary); color: var(--accent);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem;
-            box-shadow: 0 4px 15px rgba(55,0,60,0.4);
-            cursor: pointer; z-index: 100;
-            transition: transform 0.2s;
-        }
-        .chat-fab:active { transform: scale(0.9); }
-        
-        .chat-window {
-            position: absolute; bottom: 85px; right: 20px; left: 20px;
-            top: 80px; /* Tall window */
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            display: flex; flex-direction: column;
-            z-index: 101;
-            transform: translateY(110%);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-            border: 1px solid var(--border);
-        }
-        .chat-window.open { transform: translateY(0); }
-        
-        .chat-header {
-            padding: 15px; background: var(--primary); color: white;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .chat-body { flex: 1; padding: 15px; overflow-y: auto; background: #f9fafb; display: flex; flex-direction: column; gap: 10px; }
-        
-        .chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; }
-        .chat-msg.user { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 2px; }
-        .chat-msg.bot { align-self: flex-start; background: white; border: 1px solid var(--border); border-bottom-left-radius: 2px; color: var(--text-main); }
-        
-        .chat-input-area { padding: 10px; border-top: 1px solid var(--border); display: flex; gap: 10px; background: white; }
-        .chat-input-area input { margin: 0; padding: 10px; text-align: left; }
-        .chat-send { background: var(--primary); color: var(--accent); border: none; width: 44px; border-radius: 12px; cursor: pointer; }
     </style>
 </head>
 
@@ -1823,27 +1780,6 @@
                     <p style="color:var(--text-sub); margin-bottom:20px; font-size:0.9rem;">Plan your chips for the next 5 weeks.</p>
                     <div id="plannerGrid" style="border:1px solid var(--border); border-radius:12px; overflow:hidden; text-align:left;"></div>
                 </div>
-            </div>
-        </div> <div id="chatFab" class="chat-fab" onclick="app.toggleChat()">
-            <i class="fa-solid fa-robot"></i>
-        </div>
-
-        <div id="chatWindow" class="chat-window">
-            <div class="chat-header">
-                <div style="font-weight:800; display:flex; align-items:center; gap:8px;">
-                    <i class="fa-solid fa-bolt" style="color:var(--accent);"></i> FPL Assistant
-                </div>
-                <div style="display:flex; gap:10px;">
-                    <i class="fa-solid fa-gear" onclick="app.setApiKey()" style="cursor:pointer; opacity:0.7;"></i>
-                    <i class="fa-solid fa-xmark" onclick="app.toggleChat()" style="cursor:pointer;"></i>
-                </div>
-            </div>
-            <div id="chatMessages" class="chat-body">
-                <div class="chat-msg bot">Hello! I'm your FPL Assistant. I have analyzed your team. Ask me about transfers, chips, or strategy!</div>
-            </div>
-            <div class="chat-input-area">
-                <input type="text" id="chatInput" placeholder="e.g. Should I sell Haaland?" onkeypress="if(event.key==='Enter') app.sendChatMessage()">
-                <button class="chat-send" onclick="app.sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
         </div>
 
@@ -3553,78 +3489,6 @@ if (transfers && transfers.length > 0) {
 
         showReplacements: (buyId, buyPos) => {
             // ... (existing code)
-        },
-
-        // --- NEW: AI Chat Logic ---
-        toggleChat: () => {
-            document.getElementById('chatWindow').classList.toggle('open');
-        },
-
-        setApiKey: () => {
-            const k = prompt("Enter OpenAI API Key (starts with sk-):", localStorage.getItem('fpl_openai_key') || '');
-            if (k) localStorage.setItem('fpl_openai_key', k);
-        },
-
-        generateContext: () => {
-            if (!app.currentPicks || app.currentPicks.length === 0) return "User has no team loaded.";
-            
-            let txt = `Current GW: ${app.gwName}. Bank: £${(app.currentBank).toFixed(1)}m. FT: ${app.ftCount}.\n`;
-            txt += `My Team:\n`;
-            app.currentPicks.forEach(p => {
-                const pl = app.playersCache[p.element];
-                if (pl) {
-                    const f = (app.fixMap[pl.team_id] || [])[1] || {opp:'-', diff:3};
-                    txt += `- ${pl.name} (${pl.team}, ${pl.pos===1?'GK':(pl.pos===2?'DEF':(pl.pos===3?'MID':'FWD'))}) £${pl.price}m. Form: ${pl.form}. Next: ${f.opp} (Diff ${f.diff}).\n`;
-                }
-            });
-            return txt;
-        },
-
-        sendChatMessage: async () => {
-            const input = document.getElementById('chatInput');
-            const txt = input.value.trim();
-            if (!txt) return;
-            
-            const msgs = document.getElementById('chatMessages');
-            msgs.innerHTML += `<div class="chat-msg user">${txt}</div>`;
-            input.value = '';
-            msgs.scrollTop = msgs.scrollHeight;
-
-            const key = localStorage.getItem('fpl_openai_key');
-            if (!key) {
-                msgs.innerHTML += `<div class="chat-msg bot">Please click the gear icon ⚙️ to set your OpenAI API Key.</div>`;
-                return;
-            }
-
-            msgs.innerHTML += `<div class="chat-msg bot" id="typing">Thinking...</div>`;
-            msgs.scrollTop = msgs.scrollHeight;
-
-            try {
-                const sysPrompt = "You are an expert FPL Assistant. Be concise. Analyze this team context: " + app.generateContext();
-                const req = {
-                    model: "gpt-3.5-turbo",
-                    messages: [{role: "system", content: sysPrompt}, {role: "user", content: txt}]
-                };
-
-                const res = await fetch('https://api.openai.com/v1/chat/completions', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-                    body: JSON.stringify(req)
-                });
-                
-                const data = await res.json();
-                document.getElementById('typing').remove();
-                if (data.error) throw new Error(data.error.message);
-                
-                const reply = data.choices[0].message.content;
-                msgs.innerHTML += `<div class="chat-msg bot">${reply.replace(/\n/g, '<br>')}</div>`;
-                msgs.scrollTop = msgs.scrollHeight;
-
-            } catch (e) {
-                const t = document.getElementById('typing');
-                if(t) t.remove();
-                msgs.innerHTML += `<div class="chat-msg bot" style="color:red">Error: ${e.message}</div>`;
-            }
         },
 
         openLeagues: async () => {
