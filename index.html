@@ -2011,10 +2011,30 @@
             return finalSuggestions.slice(0, 5);
         },
 
-        recommendChips: (picks, fixMap, currentGW, history) => {
+        // FIX: Analyze the user-selected strategy (targetMove) instead of loop
+        recommendChips: (picks, fixMap, currentGW, history, targetMove) => {
             const used = history.chips.map(c => c.name);
             const next5 = [0,1,2,3,4].map(i => currentGW + i);
             let rec = null;
+
+            // 0. LINK: React to Selected Transfer Scenario
+            if (targetMove) {
+                // A. Wildcard: If selected move is a massive hit-taking overhaul
+                if ((targetMove.type.includes('(-8)') || targetMove.type.includes('(-12)') || targetMove.type.includes('(-16)')) && targetMove.diff > 12) {
+                    if (!used.includes('wildcard')) {
+                        rec = { chip: 'Wildcard', gw: next5[0], reason: `Selected strategy gains +${targetMove.diff} pts but costs hits. Active Wildcard recommended.` };
+                    }
+                }
+                
+                // B. Triple Captain: If selected move brings in a superstar
+                if (!rec) {
+                    const star = targetMove.in.find(p => p.price > 11.0);
+                    if (star && !used.includes('3xc')) {
+                        const f = (fixMap[star.team_id]||[])[0]; // Next GW
+                        if (f && f.diff <= 2) rec = { chip: 'Triple Captain', gw: next5[0], reason: `Strategy adds ${star.web_name} vs ${f.opp}. Perfect Triple Captain entry.` };
+                    }
+                }
+            }
 
             // 1. Wildcard (Long-term Crisis Check)
             if (!used.includes('wildcard')) {
@@ -2103,6 +2123,7 @@
     // =========================================
 
     const app = {
+        plannerSelIndex: 0, // State for selected strategy
         userData: null, playersCache: {}, fixMap: {}, currentPicks: [], currentBank: 0,
         teams: null, currentTool: 'squad', historyData: null, deadline: null, gwName: '',
         
@@ -2216,6 +2237,7 @@
                 else app.load(localStorage.getItem('fpl_id_final'));
 
             } else if (t === 'planner') {
+                app.plannerSelIndex = 0; // Reset to best move on open
                 app.show('plannerView');
                 app.renderPlanner();
 
@@ -2499,32 +2521,99 @@
             const container = document.getElementById('plannerGrid');
             const currentGW = parseInt(app.gwName.replace(/\D/g,'')) || 1;
             
-            // AI Recommendation
-            const rec = TransferBot.recommendChips(app.currentPicks, app.fixMap, currentGW, app.historyData);
+            // AI Recommendation - LINKED TO TRANSFERS
+            const suggestions = TransferBot.analyze(app.currentPicks, app.playersCache, app.currentBank, app.fixMap, app.ftCount);
+            
+            // UI: Scenario Selector Bar
+            let selectorHtml = '';
+            if (suggestions.length > 0) {
+                selectorHtml = `<div class="filter-bar" style="margin-bottom:20px;">`;
+                suggestions.forEach((s, i) => {
+                    const isActive = i === app.plannerSelIndex;
+                    const style = isActive ? 'background:var(--primary); color:white; border-color:var(--primary); box-shadow:0 4px 10px rgba(55,0,60,0.3);' : '';
+                    selectorHtml += `<div class="filter-pill" style="min-width:100px; padding:8px 12px; ${style}" onclick="app.plannerSelIndex=${i}; app.renderPlanner();">
+                        <div style="font-size:0.65rem; opacity:0.8;">${s.type}</div>
+                        <div style="font-size:0.8rem;">+${s.diff} pts</div>
+                    </div>`;
+                });
+                selectorHtml += `</div>`;
+            }
+
+            // Get Selected Move
+            const targetMove = suggestions[app.plannerSelIndex] || null;
+            
+            // Visual Strategy Feedback (The Card)
+            let strategyHtml = '';
+            if (targetMove) {
+                const moves = targetMove.in.map((pIn, i) => {
+                    const pOut = targetMove.out[i];
+                    return `<div><span style="color:#ef4444;">${pOut.name}</span> <i class="fa-solid fa-arrow-right" style="font-size:0.7rem; color:#9ca3af; margin:0 4px;"></i> <span style="color:#16a34a; font-weight:800;">${pIn.name}</span></div>`;
+                }).join('');
+                strategyHtml = `<div style="background:white; border:1px solid var(--border); border-radius:12px; padding:15px; margin-bottom:20px; font-size:0.85rem; box-shadow:0 2px 10px rgba(0,0,0,0.03);"><div style="font-weight:700; color:var(--text-sub); margin-bottom:8px; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #f3f4f6; padding-bottom:4px;">Analyzing Scenario</div>${moves}</div>`;
+            }
+
+            // Analyze Specific Move
+            const rec = TransferBot.recommendChips(app.currentPicks, app.fixMap, currentGW, app.historyData, targetMove);
             let aiHtml = '';
             if (rec) {
+                // UI: "Mission Control" Theme. Dark Purple for Action, Clean White for Hold.
+                const isAction = rec.chip !== 'Save Chips';
+                const bg = isAction ? 'linear-gradient(145deg, #37003c 0%, #1f0025 100%)' : 'white';
+                const border = isAction ? 'none' : '1px solid var(--border)';
+                const txt = isAction ? 'white' : 'var(--text-main)';
+                const sub = isAction ? 'rgba(255,255,255,0.7)' : 'var(--text-sub)';
+                const badge = isAction ? 'background:#e90052; color:white;' : 'background:#f3f4f6; color:#6b7280;';
+                const icon = isAction ? 'color:#fbbf24; text-shadow:0 0 15px rgba(251,191,36,0.5);' : 'color:#9ca3af;';
+
                 aiHtml = `
-                <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:15px; border-radius:12px; margin-bottom:20px; display:flex; gap:12px; align-items:start;">
-                    <div style="font-size:1.5rem; color:#166534;"><i class="fa-solid fa-robot"></i></div>
-                    <div>
-                        <div style="font-weight:800; color:#166534; font-size:0.9rem; margin-bottom:2px;">AI Strategy Found</div>
-                        <div style="color:#14532d; font-size:0.85rem; line-height:1.4;">
-                            Use <strong>${rec.chip}</strong> in <strong>GW${rec.gw}</strong>.<br>
-                            <span style="font-size:0.75rem; opacity:0.8;">Reason: ${rec.reason}</span>
+                <div style="background:${bg}; border:${border}; padding:20px; border-radius:16px; margin-bottom:25px; box-shadow:0 10px 30px -10px rgba(0,0,0,${isAction?0.4:0.05}); position:relative; overflow:hidden;">
+                    ${isAction ? '<div style="position:absolute; top:-20px; right:-20px; font-size:8rem; color:white; opacity:0.03; transform:rotate(-20deg); pointer-events:none;"><i class="fa-solid fa-microchip"></i></div>' : ''}
+                    <div style="display:flex; justify-content:space-between; align-items:start; position:relative; z-index:2;">
+                        <div>
+                            <div style="margin-bottom:8px;">
+                                <span style="font-size:0.65rem; font-weight:800; letter-spacing:1px; text-transform:uppercase; padding:4px 10px; border-radius:20px; ${badge}">
+                                    <i class="fa-solid fa-robot" style="margin-right:4px;"></i> AI Intelligence
+                                </span>
+                            </div>
+                            <div style="font-size:1.6rem; font-weight:800; color:${txt}; margin-bottom:6px; letter-spacing:-0.5px;">
+                                ${rec.chip}
+                            </div>
+                            <div style="font-size:0.9rem; color:${sub}; font-weight:500; line-height:1.5; max-width:280px;">
+                                ${rec.reason}
+                            </div>
+                        </div>
+                        <div style="font-size:2.5rem; ${icon}">
+                            <i class="fa-solid ${rec.chip === 'Wildcard' ? 'fa-wand-magic-sparkles' : (rec.chip === 'Free Hit' ? 'fa-bolt' : (rec.chip === 'Triple Captain' ? 'fa-rocket' : 'fa-shield-halved'))}"></i>
                         </div>
                     </div>
                 </div>`;
             }
 
-            let html = aiHtml;
+            // FIX: Create Projected Squad based on selected strategy
+            let projectedPicks = JSON.parse(JSON.stringify(app.currentPicks));
+            if (targetMove) {
+                targetMove.out.forEach((pOut, idx) => {
+                    const pIn = targetMove.in[idx];
+                    const pick = projectedPicks.find(p => p.element === pOut.id);
+                    if (pick) pick.element = pIn.id; // Swap ID for visualization
+                });
+            }
+
+            // FIX: Add selectorHtml to the final output so buttons appear
+            let html = selectorHtml + strategyHtml + aiHtml;
             for (let i = 0; i < 5; i++) {
                 const gw = currentGW + i;
                 
                 // 1. Calculate Team Difficulty & Dynamic Captain (Best Fixture)
                 let totalDiff = 0, capDiff = 6, capOpp = '-';
 
-                app.currentPicks.forEach(p => {
-                    const f = (app.fixMap[p.element] || [])[i] || { diff: 3, opp: '-' };
+                // FIX: Use 'projectedPicks' instead of 'app.currentPicks'
+                projectedPicks.forEach(p => {
+                    // FIX: Resolve Team ID for Fixture Lookup
+                    const pl = app.playersCache[p.element];
+                    const tid = pl ? pl.team_id : 0;
+                    const f = (app.fixMap[tid] || [])[i] || { diff: 3, opp: '-' };
+
                     if (p.position <= 11) {
                         totalDiff += f.diff;
                         // Smart Captain: Starter (Not GK) with Easiest Game
@@ -2540,10 +2629,14 @@
                 const barWidth = Math.max(10, Math.min(100, (5.5 - avgDiff) * 35)); 
                 const barColor = avgDiff < 3.0 ? '#00ff85' : (avgDiff > 3.8 ? '#ef4444' : '#fbbf24');
 
-                // 2. Bench Dots
+                // 2. Bench Dots (Using Projected Squad)
                 let benchHtml = '';
-                app.currentPicks.filter(p => p.position > 11).forEach(p => {
-                     const f = (app.fixMap[p.element] || [])[i] || { diff: 3 };
+                projectedPicks.filter(p => p.position > 11).forEach(p => {
+                     // FIX: Resolve Team ID for Fixture Lookup
+                     const pl = app.playersCache[p.element];
+                     const tid = pl ? pl.team_id : 0;
+                     const f = (app.fixMap[tid] || [])[i] || { diff: 3 };
+
                      const bColor = f.diff < 3 ? '#00ff85' : (f.diff > 3 ? '#ef4444' : '#d1d5db');
                      benchHtml += `<div style="width:5px; height:5px; border-radius:50%; background:${bColor};"></div>`;
                 });
