@@ -546,7 +546,8 @@
         }
         .cs-shield {
             position: absolute;
-            top: -6px; right: -6px; left: auto;
+            /* FIX: Moved to Left to avoid blocking the Event Stack on the right */
+            top: -6px; left: -6px; right: auto;
             transform: none;
             width: 18px; height: 18px;
             display: flex;
@@ -653,8 +654,13 @@
         /* --- Player Pill Components --- */
         .player-pill {
             background: rgba(255,255,255,0.98);
-            width: 76px; /* Wider for legibility */
-            padding: 8px 2px;
+            /* FIX: Responsive width to fit 5 midfielders on mobile */
+            width: 18%; 
+            min-width: 66px; 
+            max-width: 80px;
+            /* FIX: Remove side/bottom padding for flush footer */
+            padding: 5px 0 0 0;
+            /* overflow: hidden; REMOVED to allow icons to hang outside */
             border-radius: 10px;
             text-align: center;
             box-shadow: 0 4px 6px rgba(0,0,0,0.15);
@@ -726,7 +732,8 @@
         /* --- Badges & Status --- */
         .captain-badge {
             position: absolute;
-            bottom: 30px; right: -4px;
+            /* FIX: Moved to Left to avoid conflict with Event Stack on the right */
+            bottom: 30px; left: -4px; right: auto; 
             background: #111;
             color: white;
             border-radius: 50%;
@@ -953,41 +960,32 @@
             border-radius: 6px;
         }
         
-        .t-body { display: flex; position: relative; }
-        
-        .t-mid-arrow {
-            position: absolute;
-            left: 50%; top: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            border: 1px solid var(--border);
-            color: var(--text-sub);
-            width: 24px; height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            font-size: 0.8rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
+        /* FIX: Vertical Stack Layout (Rows) */
+        .t-body { display: flex; flex-direction: column; }
+        .t-mid-arrow { display: none; } 
 
         .t-half {
-            flex: 1;
-            padding: 20px 10px;
+            width: 100%;
+            padding: 12px 15px;
             display: flex;
-            flex-direction: column;
+            flex-direction: column; /* Stack players if multiple */
+            gap: 8px;
+        }
+        
+        .t-out { background: #fef2f2; border-bottom: 1px solid #fecaca; }
+        .t-in { background: #f0fdf4; }
+        .t-out::after { display: none; }
+
+        /* New Horizontal Player Row */
+        .t-player-row {
+            display: flex;
             align-items: center;
-            text-align: center;
+            gap: 12px;
+            width: 100%;
+            cursor: pointer;
         }
-        /* No Borders, just soft colors */
-        /* Clean Ticket Style */
-        .t-out { background: transparent; position: relative; }
-        .t-in { background: transparent; }
-        .t-out::after {
-            content: ""; position: absolute; right: 0; top: 10px; bottom: 10px;
-            width: 1px; background: #f3f4f6; /* Subtle Divider */
-        }
+        .t-info-box { flex: 1; }
+        .t-stat-box { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
         
         .t-label {
             font-size: 0.7rem; /* Readable */
@@ -1647,6 +1645,9 @@
             <div id="nav-planner" class="menu-item" onclick="switchTool('planner')">
                 <i class="fa-regular fa-calendar-check"></i> Chip Planner
             </div>
+            <div class="menu-item" onclick="app.testNotification()">
+                <i class="fa-regular fa-bell"></i> Test Notification
+            </div>
         </div>
         <div class="menu-footer">
             <button class="logout-btn" onclick="clearData()">
@@ -2147,7 +2148,13 @@
         deadlineNotified: false, dayNotified: false, fixtureCache: {}, suggestionCache: null, searchTimer: null,
 
         init: () => {
-            if ('Notification' in window) Notification.requestPermission();
+            // FIX: Request Permission on first click (Browser Security Requirement)
+            const enableNotif = () => {
+                if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+                document.removeEventListener('click', enableNotif);
+            };
+            document.addEventListener('click', enableNotif);
+
             const savedId = localStorage.getItem('fpl_id_final');
             const lastTool = localStorage.getItem('fpl_last_tool');
             if (lastTool) app.currentTool = lastTool;
@@ -2157,6 +2164,15 @@
             }
             // Fix: Initialize Browser History State
             history.replaceState({ tool: app.currentTool }, '', '');
+        },
+
+        testNotification: () => {
+            if (!('Notification' in window)) return alert("Not supported.");
+            if (Notification.permission === 'granted') {
+                new Notification("🔔 Success!", { body: "Notifications are working correctly." });
+            } else {
+                alert(`Permission is ${Notification.permission}. Click the screen to enable.`);
+            }
         },
 
         fetchUrl: async (targetUrl) => {
@@ -2312,7 +2328,7 @@
                                 const outIds = JSON.stringify(s.out.map(p => p.id));
                                 const inIds = JSON.stringify(s.in.map(p => p.id));
                                 
-                                // FIX: Use Real Selling Price for Bank Calculation
+                                // Bank Calc
                                 const bankRem = (app.currentBank + s.out.reduce((a,b)=> {
                                     const p = app.currentPicks.find(px => px.element === b.id);
                                     return a + (p && p.selling_price ? p.selling_price/10 : b.price);
@@ -2321,55 +2337,42 @@
                                 let verdict = '';
                                 if (s.type.includes('(-') && s.diff > 6) verdict = '<span style="font-size:0.65rem; font-weight:800; color:#16a34a; background:#dcfce7; padding:2px 6px; border-radius:4px; margin-left:4px;"><i class="fa-regular fa-gem"></i> Worth Hit</span>';
                                 else if (!s.type.includes('(-') && app.ftCount > 1) verdict = '<span style="font-size:0.65rem; font-weight:800; color:#2563eb; background:#dbeafe; padding:2px 6px; border-radius:4px; margin-left:4px;"><i class="fa-solid fa-star"></i> Use FT</span>';
-                                else if (s.diff > 8) verdict = '<span style="font-size:0.65rem; font-weight:800; color:#d97706; background:#fef3c7; padding:2px 6px; border-radius:4px; margin-left:4px;"><i class="fa-solid fa-fire-flame-curved"></i> Hot</span>';
 
-                                // Strategy Badge Logic
-                                let stratBadge = '';
-                                if (s.out.length > 0 && s.in.length > 0) {
-                                    const pOut = s.out[0], pIn = s.in[0]; 
-                                    const outF = (app.fixMap[pOut.team_id]||[]).slice(1,4).reduce((a,b)=>a+(b.diff||3),0);
-                                    const inF = (app.fixMap[pIn.team_id]||[]).slice(1,4).reduce((a,b)=>a+(b.diff||3),0);
-                                    
-                                    if ((outF - inF) >= 3) stratBadge = '<span style="font-size:0.6rem; background:#dcfce7; color:#166534; padding:2px 6px; border-radius:4px; font-weight:800; border:1px solid #bbf7d0; margin-left:4px;">Fixture Swing</span>';
-                                    else if ((parseFloat(pIn.form)-parseFloat(pOut.form)) > 2.0) stratBadge = '<span style="font-size:0.6rem; background:#ffedd5; color:#9a3412; padding:2px 6px; border-radius:4px; font-weight:800; border:1px solid #fed7aa; margin-left:4px;">Form Upgrade</span>';
-                                    else if ((pOut.price - pIn.price) > 0.5) stratBadge = '<span style="font-size:0.6rem; background:#e0e7ff; color:#3730a3; padding:2px 6px; border-radius:4px; font-weight:800; border:1px solid #c7d2fe; margin-left:4px;">Frees Funds</span>';
-                                }
+                                // Render Rows Helper
+                                const renderRow = (list, label, labelClass) => {
+                                    let str = `<div class="t-half ${labelClass === 'lbl-out' ? 't-out' : 't-in'}"><div class="t-label ${labelClass}" style="align-self:start; margin-bottom:0;">${label}</div>`;
+                                    list.forEach(p => {
+                                        const fixtures = app.fixMap[p.team_id] || [];
+                                        let dots = '<div class="t-fdr">';
+                                        fixtures.slice(1, 4).forEach(f => { if(f) dots += `<div class="t-dot bg-${f.diff}">${f.opp}</div>` });
+                                        dots += '</div>';
+                                        
+                                        const net = (p.transfers_in || 0) - (p.transfers_out || 0);
+                                        const netStr = (Math.abs(net) > 999) ? (net/1000).toFixed(1) + 'k' : net;
+                                        const warn = p.status === 'd' ? '<i class="fa-solid fa-triangle-exclamation" style="color:#fbbf24; margin-left:4px; font-size:0.75rem;"></i>' : (['i','s','n'].includes(p.status) ? '<i class="fa-solid fa-circle-exclamation" style="color:#ef4444; margin-left:4px; font-size:0.75rem;"></i>' : '');
 
-                                // FIX: Added flex-wrap:wrap to prevent badge overflow on mobile
-                                html += `<div class="${cardClass}"><div class="t-header" style="align-items:center;"><div>${badge}<div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:4px;"><div class="t-type">${s.type}</div>${verdict}${stratBadge}</div><div class="t-bank-tag">Bank: £${bankRem}m</div></div><div class="t-gain">+${s.diff}</div></div><div class="t-body"><div class="t-mid-arrow"><i class="fa-solid fa-arrow-right"></i></div><div class="t-half t-out"><span class="t-label lbl-out">SELL</span>`;
-                                s.out.forEach(p => {
-                                    const fixtures = app.fixMap[p.team_id] || [];
-                                    let dots = '<div class="t-fdr">';
-                                    // Slice 1,4 to skip current GW and show next available
-                                    fixtures.slice(1, 4).forEach(f => { if(f) dots += `<div class="t-dot bg-${f.diff}">${f.opp}</div>` });
-                                    dots += '</div>';
-                                    const pc = p.cost_change > 0 ? '<span class="pc-arrow pc-up">▲</span>' : (p.cost_change < 0 ? '<span class="pc-arrow pc-down">▼</span>' : '');
-                                    
-                                    const net = (p.transfers_in || 0) - (p.transfers_out || 0);
-                                    const netClass = net >= 0 ? 't-net-pos' : 't-net-neg';
-                                    const netStr = (Math.abs(net) > 999) ? (net/1000).toFixed(1) + 'k' : net;
-                                    
-                                    const warn = p.status === 'd' ? '<i class="fa-solid fa-triangle-exclamation" style="color:#fbbf24; margin-left:4px; font-size:0.75rem;"></i>' : (['i','s','n'].includes(p.status) ? '<i class="fa-solid fa-circle-exclamation" style="color:#ef4444; margin-left:4px; font-size:0.75rem;"></i>' : '');
+                                        str += `
+                                        <div class="t-player-row" onclick="app.openModal(${p.id})">
+                                            <img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${p.team_code}-66.png" style="width:40px; height:50px; object-fit:contain;">
+                                            <div class="t-info-box">
+                                                <div style="font-weight:800; font-size:0.95rem; color:#111;">${p.name}${warn}</div>
+                                                <div style="font-size:0.75rem; color:#6b7280; font-weight:600;">${p.team} • <span style="${net>=0?'color:#16a34a':'color:#ef4444'}">${net>=0?'+':''}${netStr} Net</span></div>
+                                            </div>
+                                            <div class="t-stat-box">
+                                                <div style="font-weight:800; font-size:0.9rem;">£${p.price}m</div>
+                                                ${dots}
+                                            </div>
+                                        </div>`;
+                                    });
+                                    return str + '</div>';
+                                };
 
-                                    html += `<div onclick="app.openModal(${p.id})"><img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${p.team_code}-66.png" class="t-kit"><div class="t-name">${p.name}${warn}</div><div class="t-meta">£${p.price}m${pc}</div><div class="t-net ${netClass}"><i class="fa-solid fa-users" style="font-size:0.55rem; margin-right:2px; opacity:0.8;"></i>${net >= 0 ? '+' : ''}${netStr}</div>${dots}</div>`;
-                                });
-                                html += `</div><div class="t-half t-in"><span class="t-label lbl-in">BUY</span>`;
-                                s.in.forEach(p => {
-                                    const fixtures = app.fixMap[p.team_id] || [];
-                                    let dots = '<div class="t-fdr">';
-                                    fixtures.slice(1, 4).forEach(f => { if(f) dots += `<div class="t-dot bg-${f.diff}">${f.opp}</div>` });
-                                    dots += '</div>';
-                                    const pc = p.cost_change > 0 ? '<span class="pc-arrow pc-up">▲</span>' : (p.cost_change < 0 ? '<span class="pc-arrow pc-down">▼</span>' : '');
-
-                                    const net = (p.transfers_in || 0) - (p.transfers_out || 0);
-                                    const netClass = net >= 0 ? 't-net-pos' : 't-net-neg';
-                                    const netStr = (Math.abs(net) > 999) ? (net/1000).toFixed(1) + 'k' : net;
-                                    
-                                    const warn = p.status === 'd' ? '<i class="fa-solid fa-triangle-exclamation" style="color:#fbbf24; margin-left:4px; font-size:0.75rem;"></i>' : (['i','s','n'].includes(p.status) ? '<i class="fa-solid fa-circle-exclamation" style="color:#ef4444; margin-left:4px; font-size:0.75rem;"></i>' : '');
-
-                                    html += `<div onclick="app.openModal(${p.id})"><img src="https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${p.team_code}-66.png" class="t-kit"><div class="t-name">${p.name}${warn}</div><div class="t-meta">£${p.price}m${pc}</div><div class="t-net ${netClass}"><i class="fa-solid fa-users" style="font-size:0.55rem; margin-right:2px; opacity:0.8;"></i>${net >= 0 ? '+' : ''}${netStr}</div>${dots}</div>`;
-                                });
-                                html += `</div></div><div style="padding:0 15px 15px 15px;"><button class="preview-btn" onclick='app.simulate(${outIds}, ${inIds})'><i class="fa-solid fa-eye"></i> Preview Team</button></div></div>`;
+                                html += `<div class="${cardClass}"><div class="t-header" style="align-items:center;"><div>${badge}<div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:4px;"><div class="t-type">${s.type}</div>${verdict}</div><div class="t-bank-tag">Bank: £${bankRem}m</div></div><div class="t-gain">+${s.diff}</div></div>
+                                <div class="t-body">
+                                    ${renderRow(s.out, 'SELL', 'lbl-out')}
+                                    ${renderRow(s.in, 'BUY', 'lbl-in')}
+                                </div>
+                                <div style="padding:15px;"><button class="preview-btn" onclick='app.simulate(${outIds}, ${inIds})'><i class="fa-solid fa-eye"></i> Preview Team</button></div></div>`;
                             });
                         } else {
                             html += `<div class="welcome-card"><p>Team is optimal. Save your transfer.</p></div>`;
@@ -2604,40 +2607,40 @@
             for (let i = 0; i < 5; i++) {
                 const gw = currentGW + i;
                 
-                // 1. Calculate Team Difficulty & Dynamic Captain (Best Fixture)
-                let totalDiff = 0, capDiff = 6, capOpp = '-';
-
-                // FIX: Use 'projectedPicks' instead of 'app.currentPicks'
-                projectedPicks.forEach(p => {
-                    // FIX: Resolve Team ID for Fixture Lookup
+                // FIX: Dynamic Optimization per Gameweek (Simulate Best XI vs Bench)
+                // 1. Score players for this specific future GW
+                const rated = projectedPicks.map(p => {
                     const pl = app.playersCache[p.element];
                     const tid = pl ? pl.team_id : 0;
                     const f = (app.fixMap[tid] || [])[i] || { diff: 3, opp: '-' };
-
-                    if (p.position <= 11) {
-                        totalDiff += f.diff;
-                        // Smart Captain: Starter (Not GK) with Easiest Game
-                        if (p.position > 1 && f.diff < capDiff) {
-                            capDiff = f.diff;
-                            capOpp = f.opp;
-                        }
-                    }
+                    const score = (parseFloat(pl.form||0)*0.5) + (6 - f.diff); // Simple Score: Form + Fixture
+                    return { p, pl, f, score };
                 });
 
+                // 2. Pick Best XI (Simple: Best GK + Best 10 Outfielders)
+                const gks = rated.filter(x => x.pl.pos === 1).sort((a,b) => b.score - a.score);
+                const outfield = rated.filter(x => x.pl.pos !== 1).sort((a,b) => b.score - a.score);
+                const starters = [gks[0], ...outfield.slice(0, 10)];
+                const bench = [...(gks.slice(1)), ...outfield.slice(10)];
+
+                // 3. Calculate Stats from Best XI (Not raw squad)
+                let totalDiff = 0;
+                starters.forEach(x => totalDiff += x.f.diff);
                 const avgDiff = totalDiff / 11;
+
+                // 4. Best Captain in Starters
+                const bestCap = starters.sort((a,b) => b.score - a.score)[0];
+                const capOpp = bestCap ? bestCap.f.opp : '-';
+                const capDiff = bestCap ? bestCap.f.diff : 3;
+
                 // Bar Visuals: Green (<3) to Red (>4)
                 const barWidth = Math.max(10, Math.min(100, (5.5 - avgDiff) * 35)); 
                 const barColor = avgDiff < 3.0 ? '#00ff85' : (avgDiff > 3.8 ? '#ef4444' : '#fbbf24');
 
-                // 2. Bench Dots (Using Projected Squad)
+                // 5. Bench Dots (From Optimization)
                 let benchHtml = '';
-                projectedPicks.filter(p => p.position > 11).forEach(p => {
-                     // FIX: Resolve Team ID for Fixture Lookup
-                     const pl = app.playersCache[p.element];
-                     const tid = pl ? pl.team_id : 0;
-                     const f = (app.fixMap[tid] || [])[i] || { diff: 3 };
-
-                     const bColor = f.diff < 3 ? '#00ff85' : (f.diff > 3 ? '#ef4444' : '#d1d5db');
+                bench.forEach(x => {
+                     const bColor = x.f.diff < 3 ? '#00ff85' : (x.f.diff > 3 ? '#ef4444' : '#d1d5db');
                      benchHtml += `<div style="width:5px; height:5px; border-radius:50%; background:${bColor};"></div>`;
                 });
 
@@ -2842,6 +2845,7 @@
                 ]);
 
                 app.currentStats = picks.entry_history;
+                app.currentStats.active_chip = picks.active_chip; // FIX: Capture active chip for Bench Boost logic
                 
                 const liveMap = {};
                 app.lastEvents = {};
@@ -3044,7 +3048,7 @@ if (transfers && transfers.length > 0) {
 
                     // Notify Squad
                     const inSquad = app.currentPicks.some(x => x.element === pid);
-                    if (inSquad) {
+                    if (inSquad && Notification.permission === 'granted') {
                         const icon = `https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${p.team_code}-66.png`;
                         if (newStats.goals > old.goals) new Notification(`⚽ GOAL! ${p.name}`, { body: `${p.team} • Total: ${el.stats.total_points}pts`, icon });
                         if (newStats.assists > old.assists) new Notification(`🅰️ ASSIST! ${p.name}`, { body: `${p.team} • Total: ${el.stats.total_points}pts`, icon });
@@ -3117,6 +3121,9 @@ if (transfers && transfers.length > 0) {
                 }
             }
 
+            // FIX: If Bench Boost is active, disable auto-subs (everyone plays)
+            if (stats.active_chip === 'bboost') { subOutIds.length = 0; subInIds.length = 0; }
+
             // Calculate Score with Subs & VC
             let liveScore = 0, playedCount = 0;
             const capPick = picks.find(p => p.is_captain);
@@ -3130,7 +3137,8 @@ if (transfers && transfers.length > 0) {
                 const isSubIn = subInIds.includes(pick.element);
                 const isSubOut = subOutIds.includes(pick.element);
                 
-                if ((isStarter && !isSubOut) || isSubIn) {
+                // FIX: Include Bench Boost players in score
+                if (stats.active_chip === 'bboost' || (isStarter && !isSubOut) || isSubIn) {
                     let mult = pick.multiplier;
                     if (capDidntPlay) {
                         if (pick.is_captain) mult = 1; // Cap didn't play
@@ -3372,17 +3380,20 @@ if (transfers && transfers.length > 0) {
             }
 
             let evtHtml = '';
+            // FIX: Vertical Event Stack (Right Side) - Keeps Jersey Visible
             if (app.viewMode === 'live' && p.stats) {
-                evtHtml += '<div class="event-row">';
-                // Goals (Football Icon)
-                for (let i = 0; i < p.stats.goals; i++) evtHtml += `<div class="evt-icon evt-goal"><i class="fa-solid fa-futbol"></i></div>`;
-                // Assists (Blue Arrow)
-                for (let i = 0; i < p.stats.assists; i++) evtHtml += `<div class="evt-icon evt-assist"><i class="fa-solid fa-share" style="transform: scaleX(-1);"></i></div>`;
-                // Cards (Rectangles)
-                if (p.stats.red_cards > 0) evtHtml += `<div class="evt-icon evt-card evt-red"></div>`;
-                if (p.stats.yellow_cards > 0) evtHtml += `<div class="evt-icon evt-card evt-yellow"></div>`;
-                // Own Goals
-                if (p.stats.own_goals > 0) evtHtml += `<div class="evt-icon evt-own"><i class="fa-solid fa-futbol"></i></div>`;
+                // Stack container positioned absolute right
+                evtHtml = '<div style="position:absolute; top:4px; right:2px; display:flex; flex-direction:column; gap:2px; z-index:25; align-items:end;">';
+                
+                // Helper for small icons
+                const iconStyle = (bg, col) => `background:${bg}; color:${col}; width:14px; height:14px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.6rem; box-shadow:0 1px 2px rgba(0,0,0,0.1); border:1px solid white;`;
+
+                for(let i=0; i<p.stats.goals; i++) evtHtml += `<div style="${iconStyle('#16a34a','white')}"><i class="fa-solid fa-futbol"></i></div>`;
+                for(let i=0; i<p.stats.assists; i++) evtHtml += `<div style="${iconStyle('#3b82f6','white')}"><i class="fa-solid fa-share" style="transform:scaleX(-1)"></i></div>`;
+                if (p.stats.red_cards > 0) evtHtml += `<div style="${iconStyle('#ef4444','white')}; border-radius:2px;"></div>`;
+                else if (p.stats.yellow_cards > 0) evtHtml += `<div style="${iconStyle('#fbbf24','white')}; border-radius:2px;"></div>`;
+                if (p.stats.own_goals > 0) evtHtml += `<div style="${iconStyle('#1f2937','#ef4444')}">OG</div>`;
+                
                 evtHtml += '</div>';
             }
 
@@ -3414,49 +3425,63 @@ if (transfers && transfers.length > 0) {
             let pcArrow = p.cost_change > 0 ? `<span class="pc-arrow pc-up">▲</span>` : (p.cost_change < 0 ? `<span class="pc-arrow pc-down">▼</span>` : '');
             let bottomBar = `<div class="pill-data"><span>£${p.price}${pcArrow}</span><span class="points-badge" style="background:${ptsBg}">${displayPoints}${bonusHtml}</span></div>`;
 
-            // Smart Live: Show Fixture if match hasn't started yet
+            // Smart Live: Seamless Footer (Flush with Card Radius)
             if (app.viewMode === 'live' && !app.isSimulating) {
-                const m = statusMap ? statusMap[p.team_id] : null;
-                if (m && m.status === 'FIX') {
-                    const f = fixtures[0] || { opp: '-', diff: 3 };
-                    // FIX: Text Contrast (Dark for Green/Grey, Light for Red/DarkGreen)
-                    const textColor = (f.diff === 2 || f.diff === 3) ? 'dark' : 'light';
-                    bottomBar = `<div class="pill-data"><span>£${p.price}</span><span class="points-badge" style="background:var(--fdr-${f.diff}); color:var(--fdr-text-${textColor})">${f.opp}</span></div>`;
-                }
+                const s = parseFloat(p.sel);
+                const valColor = s < 10 ? '#8b5cf6' : (s > 40 ? '#ef4444' : '#374151');
+                
+                // Solid block style for flush look
+                const blockStyle = "flex:1; height:20px; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:800;";
+
+                // FIX: Manually apply border-radius since we removed overflow:hidden from parent
+                bottomBar = `<div style="display:flex; width:100%; margin-top:2px; border-top:1px solid #f3f4f6;">
+                   <div style="${blockStyle} background:#fff; color:${valColor}; border-radius: 0 0 0 10px;">£${p.price}${pcArrow}</div>
+                   <div style="${blockStyle} background:${ptsBg}; color:white; border-radius: 0 0 10px 0;">${displayPoints}${bonusHtml}</div>
+               </div>`;
             }
             
             if (app.viewMode === 'next') {
-                dotsHtml = '';
-                evtHtml = '';
+                dotsHtml = ''; // FIX: Hide 3-game list to reduce clutter
+                evtHtml = ''; 
                 const nextF = fixtures[1] || { opp: '-', diff: 3 }; 
                 
-                // Calculate Projected Points (xP) = (Form + Ease) * Chance
+                // FIX: Show Single Next Opponent as Top Badge
+                const textColor = nextF.diff > 3 ? 'white' : '#111';
+                matchBadge = `<div class="match-status" style="background:var(--fdr-${nextF.diff}); color:${textColor}; border:none;">${nextF.opp}</div>`;
+
+                // Calculate Projected Points (xP)
                 let chance = (p.chance !== null ? p.chance : 100) / 100;
                 let xP = ((parseFloat(p.form||0) * 0.5) + ((6 - nextF.diff) * 1.0)) * chance;
-                
                 if (p.is_captain) xP *= 2;
+
+                // FIX: Match Live Card Design (Solid Flush Footer)
+                const blockStyle = "flex:1; height:20px; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:800;";
                 
-                // Standard Layout: Removed inline font-size to match Live view (0.7rem)
-                // FIX: Text Contrast (Dark for Green/Grey, Light for Red/DarkGreen)
-                const textColor = (nextF.diff === 2 || nextF.diff === 3) ? 'dark' : 'light';
-                bottomBar = `<div class="pill-data" style="gap:2px; white-space:nowrap;"><span style="font-weight:800; color:#374151;"><i class="fa-solid fa-wand-magic-sparkles" style="color:#e90052; font-size:0.6rem; margin-right:1px;"></i>${xP.toFixed(1)}</span><span class="points-badge" style="background:var(--fdr-${nextF.diff}); color:var(--fdr-text-${textColor}); padding:0 3px;">${nextF.opp}</span></div>`;
+                bottomBar = `<div style="display:flex; width:100%; margin-top:2px; border-top:1px solid #f3f4f6;">
+                   <div style="${blockStyle} background:#fff; color:#374151; border-radius: 0 0 0 10px;">£${p.price}${pcArrow}</div>
+                   <div style="${blockStyle} background:#e0e7ff; color:#3730a3; border-radius: 0 0 10px 0;">${xP.toFixed(1)} xP</div>
+               </div>`;
             }
 
             // --- SMART STATUS ICONS (STACKED) ---
-            let stackHtml = '<div class="status-stack">';
-            
-            // 1. Availability (Injury/Suspension)
-            if (p.status === 'd') stackHtml += `<div class="status-icon si-warn"><i class="fa-solid fa-exclamation"></i></div>`;
-            else if (['i', 's', 'n'].includes(p.status)) stackHtml += `<div class="status-icon si-bad"><i class="fa-solid fa-xmark"></i></div>`;
+            let stackHtml = '';
+            // FIX: Only generate HTML if NOT in Live Mode (Prevents stray </div> bug)
+            if (app.viewMode !== 'live' || app.isSimulating) {
+                stackHtml = '<div class="status-stack">';
+                
+                // 1. Availability (Injury/Suspension)
+                if (p.status === 'd') stackHtml += `<div class="status-icon si-warn"><i class="fa-solid fa-exclamation"></i></div>`;
+                else if (['i', 's', 'n'].includes(p.status)) stackHtml += `<div class="status-icon si-bad"><i class="fa-solid fa-xmark"></i></div>`;
 
-            // 2. Form & Diff
-            const form = parseFloat(p.form);
-            const sel = parseFloat(p.sel);
-            if (form > 6.0) stackHtml += `<div class="status-icon si-fire"><i class="fa-solid fa-fire"></i></div>`;
-            else if (form < 2.0) stackHtml += `<div class="status-icon si-cold"><i class="fa-regular fa-snowflake"></i></div>`;
-            if (sel < 10.0) stackHtml += `<div class="status-icon si-gem"><i class="fa-regular fa-gem"></i></div>`;
-            
-            stackHtml += '</div>';
+                // 2. Form & Diff
+                const form = parseFloat(p.form);
+                const sel = parseFloat(p.sel);
+                if (form > 6.0) stackHtml += `<div class="status-icon si-fire"><i class="fa-solid fa-fire"></i></div>`;
+                else if (form < 2.0) stackHtml += `<div class="status-icon si-cold"><i class="fa-regular fa-snowflake"></i></div>`;
+                if (sel < 10.0) stackHtml += `<div class="status-icon si-gem"><i class="fa-regular fa-gem"></i></div>`;
+                
+                stackHtml += '</div>';
+            }
 
             // Heatmap Border: Next GW only, ignore Captains (who have gold border)
             let pillStyle = '';
