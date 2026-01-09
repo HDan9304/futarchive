@@ -2168,10 +2168,18 @@
 
         testNotification: () => {
             if (!('Notification' in window)) return alert("Not supported.");
+            
+            // FIX: If not granted, explicitly ask for permission now (User Gesture)
             if (Notification.permission === 'granted') {
                 new Notification("🔔 Success!", { body: "Notifications are working correctly." });
+            } else if (Notification.permission !== 'denied') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        new Notification("🔔 Success!", { body: "Notifications enabled!" });
+                    }
+                });
             } else {
-                alert(`Permission is ${Notification.permission}. Click the screen to enable.`);
+                alert("Notifications are blocked. Please enable them in your browser settings.");
             }
         },
 
