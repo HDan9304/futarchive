@@ -528,6 +528,44 @@
         }
         .pitch-loader.active { opacity: 1; pointer-events: all; }
         
+        /* Chip Recommendation Box */
+        .chip-rec-box {
+            background: linear-gradient(135deg, #fff 0%, #f3f4f6 100%);
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            animation: fadeIn 0.3s ease;
+        }
+        .chip-rec-box.hidden { display: none; }
+        .cr-icon {
+            width: 40px; height: 40px;
+            background: var(--primary);
+            color: var(--accent);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .cr-content { flex: 1; }
+        .cr-title {
+            font-size: 0.75rem; font-weight: 800;
+            color: var(--text-sub); text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+        .cr-value {
+            font-size: 1rem; font-weight: 800;
+            color: var(--primary);
+        }
+        .cr-reason {
+            font-size: 0.7rem; color: #6b7280;
+            margin-top: 2px; line-height: 1.3;
+        }
+        
         .pitch-container {
             background-color: var(--grass-1);
             /* Clean Flat Look - Removed heavy vignette for clarity */
@@ -1567,6 +1605,27 @@
             transform: translateX(-100%); animation: shimmer 1.5s infinite; 
         }
         @keyframes shimmer { 100% { transform: translateX(100%); } }
+
+        /* History Curve Graph */
+        .history-card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        /* FIX: Responsive Height and Width */
+        .graph-container { width: 100%; height: 300px; position: relative; }
+        svg { width: 100%; height: 100%; overflow: visible; }
+        
+        /* New History Navigation */
+        .hist-nav { display:flex; background:#f3f4f6; padding:4px; border-radius:12px; margin-bottom:20px; }
+        .hist-btn { flex:1; text-align:center; padding:10px; font-size:0.75rem; font-weight:700; color:#6b7280; border-radius:10px; cursor:pointer; transition:0.2s; }
+        .hist-btn.active { background:white; color:var(--primary); box-shadow:0 2px 5px rgba(0,0,0,0.05); }
+
+        .g-line { fill: none; stroke: var(--primary); stroke-width: 3px; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+        .g-dot { fill: white; stroke: var(--primary); stroke-width: 2px; transition: r 0.2s; cursor: pointer; }
+        .g-area { fill: rgba(55, 0, 60, 0.05); }
+        .g-tooltip { position: absolute; background: var(--primary); color: white; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; pointer-events: none; opacity: 0; transition: opacity 0.2s; transform: translate(-50%, -150%); white-space: nowrap; z-index: 10; }
+        /* FIX: Pro Chart Styles (Grid, Axis, Tags) */
+        .g-grid { stroke: #f3f4f6; stroke-width: 1px; stroke-dasharray: 4 4; }
+        .g-axis-text { font-size: 0.6rem; fill: #9ca3af; font-weight: 600; text-anchor: end; }
+        .g-axis-x { text-anchor: middle; }
+        .g-summary { font-size: 0.7rem; font-weight: 800; fill: var(--primary); opacity: 0.8; }
     </style>
 </head>
 
@@ -1645,6 +1704,9 @@
             <div id="nav-planner" class="menu-item" onclick="switchTool('planner')">
                 <i class="fa-regular fa-calendar-check"></i> Chip Planner
             </div>
+            <div id="nav-history" class="menu-item" onclick="switchTool('history')">
+                <i class="fa-solid fa-chart-line"></i> History
+            </div>
             <div class="menu-item" onclick="app.testNotification()">
                 <i class="fa-regular fa-bell"></i> Test Notification
             </div>
@@ -1721,6 +1783,8 @@
                         <i class="fa-regular fa-calendar"></i> Next GW
                     </div>
                 </div>
+                
+                <div id="chipRecContainer" class="chip-rec-box hidden"></div>
 
                 <div id="capRecommendation"></div>
 
@@ -1753,9 +1817,28 @@
                     <div class="bench-header">Substitutes</div>
                     <div id="benchRow" class="bench-row"></div>
                 </div>
-
-                <div id="historyGraph" class="hist-box" style="border-bottom:none;"></div>
             </div> 
+
+            <div id="historyView" class="hidden">
+                <div class="welcome-card" style="padding:20px; text-align:left; background:#ffffff;">
+                    <div style="display:flex; justify-content:space-between; align-items:end; margin-bottom:20px;">
+                        <div>
+                            <h2 style="margin-bottom:2px; color:var(--primary); font-size:1.4rem;">Performance</h2>
+                            <p style="color:var(--text-sub); font-size:0.85rem;">Season trajectory</p>
+                        </div>
+                    </div>
+                    
+                    <div class="hist-nav">
+                        <div class="hist-btn active" data-metric="points" onclick="app.renderHistory('points')">Points</div>
+                        <div class="hist-btn" data-metric="overall_rank" onclick="app.renderHistory('overall_rank')">Overall Rank</div>
+                        <div class="hist-btn" data-metric="rank" onclick="app.renderHistory('rank')">GW Rank</div>
+                    </div>
+
+                    <div class="history-card" style="padding:10px 0; box-shadow:none;">
+                        <div id="historyGraphContainer" class="graph-container"></div>
+                    </div>
+                </div>
+            </div>
 
             <div id="transfersView" class="hidden">
                 <div class="search-container">
@@ -2233,7 +2316,8 @@
 
         show: (viewId) => {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            ['welcomeView', 'loadingView', 'dashboardView', 'transfersView', 'plannerView'].forEach(v => document.getElementById(v).classList.add('hidden'));
+            // FIX: Added 'historyView' to the list so it gets hidden correctly
+            ['welcomeView', 'loadingView', 'dashboardView', 'transfersView', 'plannerView', 'historyView'].forEach(v => document.getElementById(v).classList.add('hidden'));
             document.getElementById(viewId).classList.remove('hidden');
         },
 
@@ -2264,6 +2348,10 @@
                 app.plannerSelIndex = 0; // Reset to best move on open
                 app.show('plannerView');
                 app.renderPlanner();
+
+            } else if (t === 'history') {
+                app.show('historyView');
+                app.renderHistory();
 
             } else {
                 // --- FIXED AUTO-RELOAD LOGIC ---
@@ -2690,8 +2778,36 @@
             container.innerHTML = html;
         },
 
+        updateStrategy: (mode) => {
+            const box = document.getElementById('chipRecContainer');
+            if (!box) return;
+            
+            if (mode !== 'next') {
+                box.classList.add('hidden');
+                return;
+            }
+
+            // Logic: Determine Chip Strategy (Default: Save)
+            // You can expand this logic to check app.userData.chips or fixtures
+            let rec = { title: "Save Chips", reason: "Hold chips. Optimize transfers for upcoming fixtures.", icon: "fa-floppy-disk" };
+            
+            box.innerHTML = `
+                <div class="cr-icon"><i class="fa-solid ${rec.icon}"></i></div>
+                <div class="cr-content">
+                    <div class="cr-title">AI Strategy • Next GW</div>
+                    <div class="cr-value">${rec.title}</div>
+                    <div class="cr-reason">${rec.reason}</div>
+                </div>
+            `;
+            box.classList.remove('hidden');
+        },
+
         toggleView: (mode) => {
             if (app.viewMode === mode) return;
+            
+            // Trigger Strategy Update
+            app.updateStrategy(mode);
+
             const loader = document.getElementById('viewLoader');
             loader.classList.add('active');
             
@@ -3194,27 +3310,7 @@ if (transfers && transfers.length > 0) {
                 document.getElementById('dispTotal').innerText = liveTotal;
             }
 
-            // --- HISTORY GRAPH (Last 5 GWs) ---
-            if (history.current && history.current.length > 0) {
-                const recents = history.current.slice(-5);
-                const maxPts = Math.max(...recents.map(r => r.points), 60); // Scale baseline
-                
-                let graphHtml = '';
-                recents.forEach((r, i) => {
-                    const prev = recents[i-1] || r;
-                    const isGreen = r.overall_rank < prev.overall_rank;
-                    const isRed = r.overall_rank > prev.overall_rank;
-                    const barClass = isGreen ? 'hb-green' : (isRed ? 'hb-red' : 'hb-gray');
-                    const hPct = Math.max(10, (r.points / maxPts) * 100);
-                    
-                    graphHtml += `<div class="hist-col">
-                        <div class="hist-val">${r.points}</div>
-                        <div class="hist-bar ${barClass}" style="height:${hPct}%;"></div>
-                        <div class="hist-gw">GW${r.event}</div>
-                    </div>`;
-                });
-                document.getElementById('historyGraph').innerHTML = graphHtml;
-            }
+            // --- HISTORY GRAPH REMOVED ---
 
             let rankArrow = '<i class="fa-solid fa-minus r-grey"></i>';
             const currentRank = user.summary_overall_rank || 0;
@@ -3621,6 +3717,121 @@ if (transfers && transfers.length > 0) {
                 app.fixtureCache[playerId] = html;
                 document.getElementById('modalFixtures').innerHTML = html;
             } catch (e) { document.getElementById('modalFixtures').innerHTML = '<div style="color:red; font-size:0.8rem;">Could not load fixtures.</div>'; }
+        },
+
+        renderHistory: (metric) => {
+            const m = metric || app.historyMetric || 'points';
+            app.historyMetric = m; 
+            
+            const data = app.historyData.current;
+            if (!data || data.length === 0) return;
+
+            // Update Toggle UI
+            document.querySelectorAll('.hist-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.metric === m);
+            });
+            
+            const container = document.getElementById('historyGraphContainer');
+            const w = container.clientWidth;
+            const h = 300;
+            // FIX: Increase padding for Axis Labels
+            const padX = 40, padY = 30;
+
+            const isRank = m.includes('rank');
+            const color = isRank ? '#059669' : '#37003c'; 
+            
+            const vals = data.map(d => d[m]);
+            const minVal = Math.min(...vals);
+            const maxVal = Math.max(...vals);
+            const range = maxVal - minVal || 1;
+            
+            const getX = (i) => padX + (i / (data.length - 1)) * (w - padX - 10);
+            const getY = (v) => {
+                const pct = (v - minVal) / range;
+                return isRank 
+                    ? padY + pct * (h - padY * 2) 
+                    : h - padY - pct * (h - padY * 2); 
+            };
+            
+            // FIX: Generate Grid Lines & Y-Axis Labels (5 Steps)
+            let gridHtml = '';
+            const steps = 5;
+            for(let i=0; i<=steps; i++) {
+                const pct = i / steps;
+                const y = h - padY - (pct * (h - padY * 2));
+                const val = minVal + (pct * range);
+                const displayVal = isRank ? Math.round(minVal + ((1-pct) * range)) : Math.round(val);
+                
+                // Format large numbers
+                const txt = displayVal > 999999 ? (displayVal/1000000).toFixed(1)+'m' : (displayVal > 999 ? (displayVal/1000).toFixed(0)+'k' : displayVal);
+                
+                gridHtml += `<line x1="${padX}" y1="${y}" x2="${w}" y2="${y}" class="g-grid" />
+                             <text x="${padX - 8}" y="${y + 3}" class="g-axis-text">${txt}</text>`;
+            }
+
+            // Build Path
+            let pathD = `M ${getX(0)} ${getY(data[0][m])}`;
+            let areaD = `M ${getX(0)} ${h - padY} L ${getX(0)} ${getY(data[0][m])}`;
+            let dots = '';
+
+            data.forEach((d, i) => {
+                if (i === 0) return;
+                const x = getX(i), y = getY(d[m]);
+                const prevX = getX(i-1), prevY = getY(data[i-1][m]);
+                const cp1x = prevX + (x - prevX) / 2;
+                pathD += ` C ${cp1x} ${prevY}, ${cp1x} ${y}, ${x} ${y}`;
+                areaD += ` L ${x} ${y}`;
+            });
+            areaD += ` L ${getX(data.length-1)} ${h - padY} Z`;
+
+            // X-Axis Labels (Every 5 GWs)
+            const fmt = (n) => n > 999999 ? (n/1000000).toFixed(1)+'m' : (n > 999 ? (n/1000).toFixed(0)+'k' : n);
+            
+            data.forEach((d, i) => {
+                const x = getX(i);
+                // Draw Label every 5 gameweeks or last one
+                if (d.event % 5 === 0 || i === data.length-1) {
+                    gridHtml += `<text x="${x}" y="${h - 10}" class="g-axis-text g-axis-x">GW${d.event}</text>`;
+                }
+                
+                dots += `<circle cx="${x}" cy="${getY(d[m])}" r="3" class="g-dot" 
+                style="stroke:${color}; fill:white;"
+                onmouseover="app.showTooltip(this, '${fmt(d[m])} • GW${d.event}')" 
+                onmouseout="app.hideTooltip()"></circle>`;
+            });
+
+            // Best/High Stat Label
+            const bestVal = isRank ? minVal : maxVal;
+            const bestTxt = isRank ? 'Best Rank' : 'Season High';
+            gridHtml += `<text x="${w-10}" y="${padY - 10}" class="g-summary" text-anchor="end">${bestTxt}: ${fmt(bestVal)}</text>`;
+
+            const svgHtml = `
+            <div id="gTooltip" class="g-tooltip"></div>
+            <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="grad${m}" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:${color}; stop-opacity:0.15" />
+                        <stop offset="100%" style="stop-color:${color}; stop-opacity:0" />
+                    </linearGradient>
+                </defs>
+                ${gridHtml}
+                <path d="${areaD}" fill="url(#grad${m})" />
+                <path d="${pathD}" class="g-line" style="stroke:${color}" />
+                ${dots}
+            </svg>`;
+            
+            container.innerHTML = svgHtml;
+        },
+        
+        showTooltip: (el, text) => {
+            const t = document.getElementById('gTooltip');
+            t.style.opacity = 1; t.innerText = text;
+            t.style.left = el.cx.baseVal.value + 'px'; t.style.top = el.cy.baseVal.value + 'px';
+            el.setAttribute('r', '7');
+        },
+        hideTooltip: () => {
+             document.getElementById('gTooltip').style.opacity = 0;
+             document.querySelectorAll('.g-dot').forEach(d => d.setAttribute('r', '4'));
         },
 
         showReplacements: (buyId, buyPos) => {
